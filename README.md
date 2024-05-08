@@ -1,1 +1,4 @@
-# nicklawman.github.io
+# the small book
+- AI study note
+- programming note
+- tree markdown project
