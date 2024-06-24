@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time ID Generator and Decoder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input {
+            padding: 10px;
+            width: calc(100% - 22px);
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        #time-id-display, #decoded-time-display {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Time ID Generator and Decoder</h1>
+    <div class="container">
+        <button id="generate-btn">Generate Time ID</button>
+        <div id="time-id-display"></div>
+        <br>
+        <input type="text" id="time-id-input" placeholder="Enter Time ID">
+        <button id="decode-btn">Decode Time ID</button>
+        <div id="decoded-time-display"></div>
+    </div>
+
+    <script>
+        class TimeID {
+            constructor(charset = "23456789abcdefghijkmnpqrstuvwxyz") {
+                this.charset = charset;
+                this.initLocalStorage();
+            }
+
+            initLocalStorage() {
+                if (!localStorage.getItem('used_ids')) {
+                    localStorage.setItem('used_ids', JSON.stringify([]));
+                }
+            }
+
+            baseEncode(num) {
+                if (num === 0) return this.charset[0];
+                const base = this.charset.length;
+                let encodedString = '';
+                while (num > 0) {
+                    const remainder = num % base;
+                    num = Math.floor(num / base);
+                    encodedString = this.charset[remainder] + encodedString;
+                }
+                return encodedString;
+            }
+
+            baseDecode(uid) {
+                const base = this.charset.length;
+                let num = 0;
+                for (let char of uid) {
+                    num = num * base + this.charset.indexOf(char);
+                }
+                return num;
+            }
+
+            encodeTimestamp(timestamp) {
+                const x = timestamp * this.charset.length;
+                return this.baseEncode(x);
+            }
+
+            decodeUid(uid) {
+                const x = this.baseDecode(uid);
+                return Math.floor(x / this.charset.length);
+            }
+
+            existsInLocalStorage(uid) {
+                const usedIds = JSON.parse(localStorage.getItem('used_ids'));
+                return usedIds.includes(uid);
+            }
+
+            addToLocalStorage(uid) {
+                const usedIds = JSON.parse(localStorage.getItem('used_ids'));
+                usedIds.push(uid);
+                localStorage.setItem('used_ids', JSON.stringify(usedIds));
+            }
+
+            gen() {
+                let timestamp = Math.floor(Date.now() / 1000);
+                let uid = this.encodeTimestamp(timestamp);
+                while (this.existsInLocalStorage(uid)) {
+                    uid = this.encodeTimestamp(++timestamp);
+                }
+                this.addToLocalStorage(uid);
+                return uid;
+            }
+
+            parse(uid) {
+                const timestamp = this.decodeUid(uid);
+                return new Date(timestamp * 1000);
+            }
+        }
+
+        function generateAndDisplayTimeId() {
+            const timeId = new TimeID();
+            const newTimeId = timeId.gen();
+            const timeStr = timeId.parse(newTimeId).toString();
+            document.getElementById('time-id-display').innerText = `${newTimeId} is ${timeStr}`;
+        }
+
+        document.getElementById('generate-btn').addEventListener('click', generateAndDisplayTimeId);
+
+        document.getElementById('decode-btn').addEventListener('click', () => {
+            const timeIdInput = document.getElementById('time-id-input').value;
+            if (timeIdInput) {
+                const timeId = new TimeID();
+                const decodedTime = timeId.parse(timeIdInput).toString();
+                document.getElementById('decoded-time-display').innerText = `Decoded Time: ${decodedTime}`;
+            } else {
+                document.getElementById('decoded-time-display').innerText = 'Please enter a valid Time ID.';
+            }
+        });
+
+        window.addEventListener('load', generateAndDisplayTimeId);
+    </script>
+</body>
+</html>
