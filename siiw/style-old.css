@@ -27,7 +27,7 @@ body {
     justify-content: center;
     padding: 20px;
     overflow-y: auto;
-    max-height: 66vh; /* Allow lyrics to take 2/3 of the screen on smaller screens */
+    max-height: 50vh; /* Allow lyrics to take half of the screen on smaller screens */
 }
 
 .lyric {
@@ -45,7 +45,6 @@ body {
     align-items: center;
     padding: 20px;
     box-sizing: border-box;
-    height: 34vh; /* Allow music player to take 1/3 of the screen on smaller screens */
 }
 
 .music-container {
@@ -56,7 +55,7 @@ body {
     padding: 20px 30px;
     position: relative;
     z-index: 10;
-    width: 80%; /* Center the music player */
+    width: 80%; /* Center the music player on the right side */
     max-width: 400px; /* Ensure a reasonable width on larger screens */
 }
 
