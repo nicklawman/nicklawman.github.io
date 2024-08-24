@@ -9,13 +9,13 @@ body {
     margin: 0;
     font-family: "Lato", sans-serif;
     display: flex;
-    flex-direction: column; /* Stack elements on smaller screens */
+    flex-direction: column;
     justify-content: space-between;
 }
 
 .container {
     display: flex;
-    flex-direction: column; /* Stack elements on smaller screens */
+    flex-direction: column;
     width: 100%;
     height: 100%;
 }
@@ -27,7 +27,7 @@ body {
     justify-content: center;
     padding: 20px;
     overflow-y: auto;
-    max-height: 66vh; /* Allow lyrics to take 2/3 of the screen on smaller screens */
+    max-height: 66vh;
 }
 
 .lyric {
@@ -45,7 +45,7 @@ body {
     align-items: center;
     padding: 20px;
     box-sizing: border-box;
-    height: 34vh; /* Allow music player to take 1/3 of the screen on smaller screens */
+    height: 34vh;
 }
 
 .music-container {
@@ -56,8 +56,8 @@ body {
     padding: 20px 30px;
     position: relative;
     z-index: 10;
-    width: 80%; /* Center the music player */
-    max-width: 400px; /* Ensure a reasonable width on larger screens */
+    width: 80%;
+    max-width: 400px;
 }
 
 .img-container {
