@@ -18,6 +18,7 @@ const songs = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"];
 // Lyrics list
 const lyric_list = {
     "01": `
+=== Now Teach, for You and Young ===
 (Verse 1)
 When life moves on, I’ve found my way,
 Left behind the daily grind, no need to stay.
@@ -61,6 +62,7 @@ Contentment in the mountain’s room,
 Where life and nature find their tune.
     `,
     "02": `
+=== Before Words Fade ===
 Verse 1:
 I see us high where mountains kiss the sky,
 With every breath, just you and I.
@@ -98,6 +100,7 @@ If only I could find the way,
 To say the words I fear each day.
 `,
     "03": `
+=== Cheap Love You Can't Afford ===
 Verse 1:
 
 I was once a cherished soul,
@@ -148,6 +151,7 @@ She’d rather lose her life, I plea,
 Than to ever abandon, ever lose me.
 `,
     "04": `
+=== Petals Fall ===
 Verse 1:
 
 In the mountains, I find my home,
@@ -192,6 +196,7 @@ The fear that one day, you’ll leave this role.
 
 `,
     "05": `
+=== We Are The Worlds ===
 Chorus:
 We dance in the light, as others fall,
 In a world split in two, where dreams stall.
@@ -223,6 +228,7 @@ We cheer for stars, while bombs fill the sky,
 What echoes in the end? A silent cry.
 `,
     "06": `
+=== Eye Drops, Words Unsaid ===
 Verse 1:
 In the cold, a mother prays,
 For a chance to see her boy who strayed.
@@ -260,6 +266,7 @@ A magic fleeting, but love remains,
 In the tears that wash away her pains.
 `,
     "07": `
+=== The Story Minds Are Made ===
 Verse 1:
 Back in the day, we thought we’d crack the code,
 Machines with minds, intelligence bestowed.
@@ -302,6 +309,7 @@ But the revolution’s rolling, come what may.
 
 `,
     "08": `
+=== Final Game ===
 Verse 1:
 In stage one, you still feel the fire,
 Dreams and goals, your heart’s desire.
@@ -350,6 +358,7 @@ Fix what you can before it’s too late,
 Live with intent, and embrace your fate.
 `,
     "09": `
+=== Do Right, to Earn Miss Right ===
 Verse 1:
 
 She’s drawn to strength, where alphas lead,
@@ -407,6 +416,7 @@ For most, if you beg and plead,
 Wrong button pressed, what do you want to earn.
 `,
     10: `
+=== Pacific Coins ===
 Verse 1:
 A boy stood firm on the island’s sand,
 Gazed far beyond to a distant land.
