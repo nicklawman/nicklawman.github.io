@@ -1,6 +1,5 @@
-# the small book
-- AI study note
-- programming note
-- tree markdown project
+# AI and Future
 
-# start your blogging over Internet as a github user
+# Songs "II Wrote
+- [Albumn Cover](songiiwrote.pdf)
+- [Song "II" Wrote](s2w/index.html)
