@@ -39,6 +39,7 @@ body {
 }
 
 .music-container-wrapper {
+    flx-direction: column;
     width: 100%;
     display: flex;
     justify-content: center;
