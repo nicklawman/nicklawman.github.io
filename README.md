@@ -1,5 +1,4 @@
-# AI and Future
-
-# Songs "II Wrote
-- [Albumn Cover](https://github.com/nicklawman/nicklawman.github.io/blob/main/songsiiwrote.pdf)
-- [Song "II" Wrote](s2w/index.html)
+# This is my web site host on github
+- Songs "I" Wrote
+- Songs "II" Wrote
+- and more to go ...
