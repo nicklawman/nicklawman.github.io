@@ -11,7 +11,7 @@
 8.	Unlock It All: Written for friends with depression, inspired by Yoshimoto Banana’s novel Amrita.
 9.	Steve’s Dots: My twenty-year reflection on Steve Jobs’ Stanford speech as a foundation for my thinking.
 10.	Death’s Gift: If you were given a chance to relive your life after doing one good deed, how would you live your final days?
-	
+
 # The Story Behind This Album
 In the “Silicon Valley 101” podcast, Mr. Feng mentioned that while AI can compose music with technical skill, it can’t instill motive and soul, which sets human musicians apart. This insight inspired me to merge my creativity with AI, making these songs truly my own.
 
@@ -34,27 +34,27 @@ TENNESSEE SKY
 
 Cherokee land, brave souls reside.
 Open roads, where dreams arise.
-Mountains sing, stories they hide,  
+Mountains sing, stories they hide,
 Thousand years into lullabies.
 
-Eagles soar, across the divide,  
-Grass fields gather, side by side.  
-Follow I-81 the world slides by,  
+Eagles soar, across the divide,
+Grass fields gather, side by side.
+Follow I-81 the world slides by,
 From Tennessee's warmth to the morning sky.
 
-Now I feel, a spark ignite,  
-Won't hold back, won't lose the fight.  
-Follow dreams, where clouds do tie, 
+Now I feel, a spark ignite,
+Won't hold back, won't lose the fight.
+Follow dreams, where clouds do tie,
 Open my wings, and learn to fly.
 
-Freeways continue hundred miles,  
-Leading me to where eagles vie.  
-Don't cry, Tennessee, I'll be fine. 
+Freeways continue hundred miles,
+Leading me to where eagles vie.
+Don't cry, Tennessee, I'll be fine.
 I'll chase the sun, hold the skies.
 
-Remember, the stars do never lie,  
-I'll shine my brightest, reaching high.  
-For every ending, say a new goodbye,  
+Remember, the stars do never lie,
+I'll shine my brightest, reaching high.
+For every ending, say a new goodbye,
 I'll come back, under your southern sky.
 
 Now I feel, a spark ignite,
@@ -138,9 +138,9 @@ So I keep the lie, does it even matter?
 ```
 
 # Song Four: Stars in Mind
- - via suno.com, with styles: "motivation, march, light, positive, rock, guitar, clean, Japanese, bright, rock, 1980, drum".
- ```markdown
- Verse 1:
+- via suno.com, with styles: "motivation, march, light, positive, rock, guitar, clean, Japanese, bright, rock, 1980, drum".
+```markdown
+Verse 1:
 On a mountain in the dark of night,
 Little Johnny gazes at the sky so bright.
 In his heart, he whispers clear,
@@ -169,12 +169,12 @@ With wings of hope, he’ll touch the sky,
 No limits here, no reason why.
 No fear of dark, no doubt inside,
 For in the stars, his fate’s aligned.
- ```
- 
- # Song Five:  Blow Who, San Francisco
- - via suno.com, with styles: "rap, angry, battle, black, poor, strong, hatred, strong, fight".
- ```markdown
- Verse 1:
+```
+
+# Song Five:  Blow Who, San Francisco
+- via suno.com, with styles: "rap, angry, battle, black, poor, strong, hatred, strong, fight".
+```markdown
+Verse 1:
 Walking the line between heaven and hell,
 This is America, can you hear the bell?
 Why’s it so different? Why’s it so strange?
@@ -213,12 +213,12 @@ Between the gold and the grime, the truth gets lost,
 In a land of riches, but at what cost?
 Walking between heaven and hell, it’s all in play,
 In a cage of worlds, who’s gonna pay?
- ```
- 
- # Song Six: Santa, Give Me a Ride
-  - via suno.com, with styles: "start with slient night, then vary to different rhyme, fun, sad, string, and at last return to the classic old song"
-  ```markdown
-  Verse 1 (Starting with a classic Christmas song):
+```
+
+# Song Six: Santa, Give Me a Ride
+- via suno.com, with styles: "start with slient night, then vary to different rhyme, fun, sad, string, and at last return to the classic old song"
+```markdown
+Verse 1 (Starting with a classic Christmas song):
 Silent night, holy night,
 All is calm, all is bright,
 But my heart, it’s filled with dread,
@@ -257,12 +257,12 @@ But why do I even try?
 Outro (Returning to the classic):
 Sleep in heavenly peace,
 Sleep in heavenly peace…
-  ```
-  
-  # Song Seven: Dragon Code, Math Untold
- - via songgenerator.io, with styles: "rap, battle, gaming, Japanese, marching, male voice, electric, intense, passion, catchy".
- ```markdown
- Verse 1:
+```
+
+# Song Seven: Dragon Code, Math Untold
+- via songgenerator.io, with styles: "rap, battle, gaming, Japanese, marching, male voice, electric, intense, passion, catchy".
+```markdown
+Verse 1:
 Yo, ready, go—let’s step in the flow,
 4,000 days, watch your knowledge grow.
 Quadratic’s the boss, in the shadows it’ll show,
@@ -295,12 +295,12 @@ Constants like  e  and  \pi  below,
 Imaginary numbers, they join the flow.
 AI, space, robot—you’ll make it so,
 Math’s the key, where your future will grow.
- ```
- 
- # Song Eight - Unlock It All
-  - via songgenerator.io, with styles: "Female vocals, rich and deep, story-like, magnetic charm, emotive, soft piano, subtle strings, light percussion".
-  ```markdown
-  Verse 1:
+```
+
+# Song Eight - Unlock It All
+- via songgenerator.io, with styles: "Female vocals, rich and deep, story-like, magnetic charm, emotive, soft piano, subtle strings, light percussion".
+```markdown
+Verse 1:
 We left behind the city’s rush, where shadows steal the light,
 Found refuge on a quiet shore, where the day turns into night.
 My brother’s heart weighed down, we sought a place to mend,
@@ -329,12 +329,12 @@ Sky on fire, hearts unfold,
 Sunset whispers, secrets told.
 Colors crash, in twilight’s call,
 In that light, we stood in awe.
-  ```
-  
-  # SONG Nine - Steve's Dots
-  - via suno.com, with styles: "Raw, gritty 1980s rock with electric guitars, heavy drums, and passionate male vocals, raw energy, intense riffs".
-  ```markdown
-  Verse 1:
+```
+
+# SONG Nine - Steve's Dots
+- via suno.com, with styles: "Raw, gritty 1980s rock with electric guitars, heavy drums, and passionate male vocals, raw energy, intense riffs".
+```markdown
+Verse 1:
 
 Threads of time, spreading where they flow,
 Dots we trace, unsure where they’ll go.
@@ -368,12 +368,12 @@ In the dance of fate, we find our flow,
 In shadows cast, the dots will show.
 Each step we take, a seed we sow,
 In the end, what’s left to show?
-  ```
-  
-  # Song Ten: Death's Gift
-  - via suno.com, with styles: "Cinematic rock ballad with soaring guitars, powerful drums, and emotional piano, blending intensity and introspection".
-  ```markdown
-  Verse 1: 
+```
+
+# Song Ten: Death's Gift
+- via suno.com, with styles: "Cinematic rock ballad with soaring guitars, powerful drums, and emotional piano, blending intensity and introspection".
+```markdown
+Verse 1:
 Eighty years, I rode the tide,
 But on that day, death walked beside.
 “He whispered low, ’You did some good,
@@ -420,5 +420,4 @@ Today’s the gift, the path I lay,
 No past to bind, no future sway.
 This second chance, my course to pave,
 With every step, what dreams to save?
-  ```
-  
+```

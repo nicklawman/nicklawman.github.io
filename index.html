@@ -8,6 +8,56 @@
             rel="stylesheet"
             href="sakura.css"
         />
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-G6JW08B206"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'G-G6JW08B206');
+        </script>
+<style>
+.amazon-play-button {
+    display: inline-block;
+    background-color: #ff9900; /* Amazon's orange color */
+    color: #ffffff;            /* White text color */
+    font-weight: bold;
+    font-size: 12px;           /* Smaller font size */
+    width: 30px;               /* Smaller fixed width for a circular shape */
+    height: 30px;              /* Smaller fixed height for a circular shape */
+    line-height: 30px;         /* Aligns text vertically */
+    border-radius: 50%;        /* Makes the button circular */
+    border: 1px solid #e47911; /* Slightly darker border */
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1); /* Smaller shadow for the smaller button */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.amazon-play-button:hover {
+    background-color: #e47911; /* Darker orange on hover */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Slightly more pronounced shadow on hover */
+}
+a {
+    display: inline-block;
+    background-color: #a8dadc; /* Soft pastel blue background color */
+    color: #ffffff;            /* White text color for good contrast */
+    padding: 8px 12px;         /* Padding to make the links look like buttons */
+    border-radius: 6px;        /* Rounded corners */
+    text-decoration: none;     /* Remove underline from all hyperlinks */
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    font-weight: bold;         /* Makes the text bold for better readability */
+}
+
+a:hover {
+    background-color: #457b9d; /* Slightly darker blue on hover */
+    text-decoration: none;     /* Ensure underline is disabled on hover */
+    transform: scale(1.05);    /* Slightly enlarge the button on hover */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Adds a shadow on hover */
+}
+</style>
     </head>
     <body>
         <p>
@@ -15,7 +65,7 @@
             <ul>
                 <li>
                     <a href="https://nicklawman.github.io/siw/player/index.html"
-                        >Listen online</a
+                        ><span class="amazon-play-button">&#9654;</span>Listen online</a
                     >
                     <p>
                         This is a simple HTML5
@@ -59,7 +109,7 @@
                 <li>
                     <a
                         href="https://nicklawman.github.io/siiw/player/index.html"
-                        >Listen online</a
+                        ><span class="amazon-play-button">&#9654;</span>Listen online</a
                     >
                     <p>
                         This is a simple HTML5
