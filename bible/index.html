@@ -8,17 +8,18 @@
         <title>聖經和合本</title>
         <style>
             :root {
-                /* THEME (dark) */
                 --bg: #0b0e12;
                 --fg: #e8e8e8;
-                --muted: #9aa0a6;
+                --muted: #aab2bb;
                 --acc: #0d6efd;
-                --card: #151a20;
-                --line: #24303a;
-                --chip: #10161c;
-                --chip-line: #2b3947;
+                --card: #141a22;
+                --line: #2a3947;
+                --chip: #17212b;
+                --chip-line: #304154;
                 --mark-bg: #2b3f64;
-                /* FONT size default */
+                --btn-bg: #1e2a36;
+                --btn-line: #3a4c60;
+                --btn-fg: #ffffff;
                 --fs: 1.8rem;
             }
             :root[data-theme="light"] {
@@ -26,11 +27,14 @@
                 --fg: #111827;
                 --muted: #6b7280;
                 --acc: #0d6efd;
-                --card: #f9fafb;
+                --card: #f7fafc;
                 --line: #e5e7eb;
                 --chip: #ffffff;
                 --chip-line: #e5e7eb;
                 --mark-bg: #fde68a;
+                --btn-bg: #ffffff;
+                --btn-line: #d1d5db;
+                --btn-fg: #111827;
             }
             html,
             body {
@@ -49,96 +53,55 @@
             body {
                 font-size: var(--fs);
             }
+
+            /* Header: cross icon + current book + prev/chapters/next */
             header {
                 position: sticky;
                 top: 0;
+                z-index: 20;
                 background: var(--card);
-                padding: 0.6rem 0.9rem;
                 border-bottom: 1px solid var(--line);
-                z-index: 10;
-                display: flex;
-                gap: 0.75rem;
-                align-items: center;
-                flex-wrap: wrap;
-            }
-            h1 {
-                font-size: 1.05rem;
-                margin: 0;
-            }
-            select,
-            input[type="search"],
-            input[type="range"] {
-                background: var(--chip);
-                color: var(--fg);
-                border: 1px solid var(--chip-line);
-                border-radius: 0.5rem;
-                padding: 0.4rem 0.6rem;
-                font-size: 0.9rem;
-            }
-            input[type="range"] {
-                padding: 0;
-                height: 1.75rem;
-            }
-            .content {
+                padding: 0.6rem 0.9rem;
                 display: grid;
-                grid-template-columns: 320px 1fr;
-                gap: 1rem;
-                padding: 1rem;
+                grid-template-columns: auto 1fr auto;
+                align-items: center;
+                gap: 0.6rem;
             }
-            .sidebar {
-                background: var(--card);
-                border: 1px solid var(--line);
-                border-radius: 0.5rem;
-                padding: 0.75rem;
-                overflow: auto;
-                max-height: calc(100dvh - 92px);
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 0.6rem;
             }
-            .group-title {
-                margin: 0.75rem 0 0.25rem;
+            .book-title {
                 font-weight: 700;
             }
-            .sub-title {
-                margin: 0.5rem 0 0.25rem;
-                font-weight: 600;
-                color: var(--muted);
-                font-size: 0.95rem;
-            }
-            .book-list {
-                display: flex;
-                flex-direction: column;
-                gap: 0.15rem;
-                margin: 0.25rem 0 0.75rem;
-            }
-            .book {
-                display: flex;
-                gap: 0.5rem;
-                align-items: center;
-            }
-            .book button {
-                background: transparent;
-                color: var(--fg);
-                border: 0;
+            .menu-btn,
+            .pill {
+                background: var(--btn-bg);
+                border: 1px solid var(--btn-line);
+                color: var(--btn-fg);
+                border-radius: 0.6rem;
+                padding: 0.32rem 0.55rem;
                 cursor: pointer;
-                text-align: left;
-                padding: 0.25rem 0.35rem;
-                border-radius: 0.3rem;
+                font-size: 1rem;
             }
-            .book button:hover {
-                background: var(--chip);
-                border: 1px solid var(--chip-line);
+            .chapbar {
+                display: flex;
+                align-items: center;
+                gap: 0.45rem;
+                flex-wrap: wrap;
             }
             .chapters {
                 display: flex;
                 flex-wrap: wrap;
                 gap: 0.35rem;
-                margin: 0.25rem 0;
             }
             .chapters button {
-                background: var(--chip);
-                border: 1px solid var(--chip-line);
-                color: var(--fg);
-                padding: 0.3rem 0.45rem;
-                border-radius: 0.4rem;
+                background: var(--btn-bg);
+                border: 1px solid var(--btn-line);
+                color: var(--btn-fg);
+                padding: 0.28rem 0.5rem;
+                border-radius: 0.45rem;
                 cursor: pointer;
                 font-size: 0.95rem;
             }
@@ -147,13 +110,22 @@
                 border-color: var(--acc);
                 color: #fff;
             }
+            .navbtn {
+                font-weight: 700;
+            }
+
+            .content {
+                padding: 1rem;
+            }
             .verses {
                 background: var(--card);
                 border: 1px solid var(--line);
-                border-radius: 0.5rem;
+                border-radius: 0.6rem;
                 padding: 1rem;
                 line-height: 1.8;
                 max-width: 80ch;
+                touch-action: pan-y;
+                scroll-margin-top: 3.5rem;
             }
             .verse {
                 margin: 0.12rem 0;
@@ -163,41 +135,6 @@
                 font-size: 0.9rem;
                 margin-right: 0.35rem;
             }
-            .muted {
-                color: var(--muted);
-            }
-            .toolbar {
-                display: flex;
-                gap: 0.5rem;
-                align-items: center;
-                flex-wrap: wrap;
-            }
-            .badge {
-                display: inline-block;
-                background: #152237;
-                border: 1px solid #20314a;
-                color: #aac4ff;
-                font-size: 0.75rem;
-                padding: 0.1rem 0.4rem;
-                border-radius: 0.4rem;
-                margin-left: 0.5rem;
-            }
-            .search-info {
-                margin-left: auto;
-                font-size: 0.9rem;
-                color: var(--muted);
-            }
-            .toggle {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.35rem;
-                padding: 0.25rem 0.45rem;
-                border: 1px solid var(--chip-line);
-                border-radius: 0.5rem;
-                background: var(--chip);
-                cursor: pointer;
-                font-size: 0.9rem;
-            }
             mark {
                 background: var(--mark-bg);
                 color: inherit;
@@ -205,96 +142,221 @@
                 border-radius: 0.2rem;
             }
 
-            /* Mobile/desktop visibility helpers */
-            .only-desktop {
+            /* Drawer */
+            .drawer-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.35);
+                backdrop-filter: blur(2px);
+                opacity: 0;
+                pointer-events: none;
+                transition: 0.2s opacity;
+                z-index: 30;
+            }
+            .drawer {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                width: min(92vw, 360px);
+                background: var(--card);
+                border-right: 1px solid var(--line);
+                transform: translateX(-100%);
+                transition: 0.25s transform;
+                z-index: 31;
+                overflow: auto;
+            }
+            body.drawer-open .drawer {
+                transform: translateX(0);
+            }
+            body.drawer-open .drawer-backdrop {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .drawer-header {
+                position: sticky;
+                top: 0;
+                background: var(--card);
+                padding: 0.8rem;
+                border-bottom: 1px solid var(--line);
                 display: flex;
-            }
-            .only-mobile {
-                display: none;
-            }
-            body.mobile .only-desktop {
-                display: none;
-            }
-            body.mobile .only-mobile {
-                display: inline-flex;
-            }
-
-            /* Mobile layout tweaks */
-            body.mobile .content {
-                grid-template-columns: 1fr;
-            }
-            body.mobile .sidebar {
-                display: none;
-            }
-            body.mobile header {
+                align-items: center;
                 gap: 0.5rem;
             }
-            body.mobile #q {
-                min-width: 12ch;
+            .drawer-title {
+                font-weight: 800;
             }
-            body.mobile .verses {
-                max-width: unset;
+            .group-title {
+                padding: 0.75rem 0.9rem 0.25rem;
+                font-weight: 800;
+            }
+            .sub-title {
+                padding: 0.35rem 0.9rem;
+                font-weight: 700;
+                color: var(--muted);
+                font-size: 0.95rem;
+            }
+
+            .book-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.5rem;
+                padding: 0.45rem 0.75rem;
+                cursor: pointer;
+                border-top: 1px solid var(--line);
+            }
+            .book-left {
+                display: flex;
+                align-items: center;
+                gap: 0.55rem;
+            }
+            .arrow {
+                transition: 0.2s transform;
+                color: var(--fg);
+            }
+            .book-name {
+                color: var(--fg);
+                font-weight: 600;
+            }
+            .book-item.open .arrow {
+                transform: rotate(90deg);
+            }
+            .chap-list {
+                display: none;
+                padding: 0.5rem 0.9rem;
+                gap: 0.35rem;
+                flex-wrap: wrap;
+            }
+            .book-item.open + .chap-list {
+                display: flex;
+            }
+            .drawer-footer {
+                position: sticky;
+                bottom: 0;
+                background: var(--card);
+                border-top: 1px solid var(--line);
+                padding: 0.7rem 0.8rem;
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            /* Mobile / Desktop icon position */
+            body.mobile header {
+                grid-template-columns: 1fr auto;
+            }
+            body.mobile .brand {
+                order: 1;
+                justify-self: start;
+            }
+            body.mobile .rightslot {
+                order: 2;
+                justify-self: end;
+            }
+            @media (min-width: 901px) {
+                .rightslot {
+                    display: none;
+                }
+            } /* desktop: hide rightslot */
+            @media (max-width: 900px) {
+                .leftslot {
+                    display: none;
+                }
+            } /* mobile: hide leftslot */
+
+            .hidden {
+                display: none !important;
             }
         </style>
     </head>
     <body>
         <header>
-            <h1>聖經和合本 <span class="badge">PWA</span></h1>
-
-            <!-- Theme toggle -->
-            <button id="themeBtn" class="toggle" title="切換主題">
-                🌞 / 🌚
-            </button>
-
-            <!-- Desktop: slider -->
-            <label class="muted only-desktop" for="fs">字體：</label>
-            <input
-                id="fs"
-                class="only-desktop"
-                type="range"
-                min="14"
-                max="36"
-                step="1"
-                value="28"
-            />
-            <span id="fsVal" class="muted only-desktop">28px</span>
-
-            <!-- Book dropdown (shared) -->
-            <label class="muted">書卷：</label>
-            <select id="bookSel"></select>
-
-            <!-- Mobile: font size A-/A+ -->
-            <div
-                class="only-mobile"
-                id="fsBtns"
-                style="gap: 0.25rem; align-items: center"
-            >
-                <button id="fsDec" class="toggle" title="減小字體">A−</button>
-                <button id="fsInc" class="toggle" title="放大字體">A+</button>
+            <!-- desktop: cross on left -->
+            <div class="brand leftslot">
+                <button id="menuBtnLeft" class="menu-btn" title="選單">
+                    ✝
+                </button>
+                <span class="book-title" id="bookTitle">—</span>
             </div>
 
-            <!-- Chapter buttons -->
-            <span id="chapterArea" class="chapters"></span>
+            <!-- center: book title (mobile) + prev / chapters / next -->
+            <div class="chapbar">
+                <span
+                    class="book-title"
+                    id="bookTitleCenter"
+                    style="display: none"
+                    >—</span
+                >
+                <button id="prevBtn" class="pill navbtn" title="上一章">
+                    ‹
+                </button>
+                <span id="chapterArea" class="chapters"></span>
+                <button id="nextBtn" class="pill navbtn" title="下一章">
+                    ›
+                </button>
+            </div>
 
-            <!-- Search -->
-            <input
-                id="q"
-                type="search"
-                placeholder="全文搜尋（離線）"
-                style="min-width: 16ch"
-            />
-            <div class="search-info" id="searchInfo"></div>
+            <!-- mobile: cross on right -->
+            <div class="rightslot">
+                <button id="menuBtnRight" class="menu-btn" title="選單">
+                    ✝
+                </button>
+            </div>
         </header>
 
+        <!-- Drawer -->
+        <div class="drawer-backdrop" id="backdrop"></div>
+        <aside class="drawer" id="drawer">
+            <div class="drawer-header">
+                <strong class="drawer-title">選單</strong>
+            </div>
+            <div id="drawerContent"><!-- built by JS --></div>
+            <div class="drawer-footer">
+                <button id="fsDec" class="pill" title="字體變小">A−</button>
+                <button id="fsInc" class="pill" title="字體變大">A+</button>
+                <button id="themeBtn" class="pill" title="切換主題">
+                    🌞/🌚
+                </button>
+                <button id="churchBtn" class="pill" title="後埔教會">
+                    ⛪ 後埔教會
+                </button>
+            </div>
+        </aside>
+
         <div class="content">
-            <aside class="sidebar" id="sidebar"></aside>
             <main>
+                <!-- 經文 -->
                 <div id="reader" class="verses"></div>
+
+                <!-- 後埔教會（點 ⛪ 顯示） -->
+                <div
+                    id="aboutChurch"
+                    class="verses hidden"
+                    style="max-width: unset"
+                >
+                    <h2>板橋後埔教會</h2>
+                    <p>台灣基督長老教會．新北市板橋區</p>
+                    <ul>
+                        <li>
+                            <strong>主日禮拜時間：</strong>台語 09:00、華語
+                            10:50（以教會最新公告為準）。
+                        </li>
+                        <li>
+                            <strong>地址：</strong>新北市板橋區重慶路 276 之 1
+                            號 3 樓。
+                        </li>
+                        <li><strong>網站：</strong>hpch.org.tw</li>
+                    </ul>
+                </div>
             </main>
         </div>
 
         <script>
-            /* ---------- Canonical groups & order (66) ---------- */
+            /* ---- constants ---- */
+            const DEFAULT_BOOK_NAME = "馬太福音";
+            const DEFAULT_CHAPTER_NO = 1;
+
+            /* ---- 66 books order ---- */
             const BOOKS_META = [
                 {
                     heading: "舊約",
@@ -414,253 +476,177 @@
                 orderedBooks: [],
                 bookIdx: 0,
                 chapIdx: 0,
-                q: "",
                 isMobile: false,
+                openBookEl: null,
             };
 
+            /* ---- helpers ---- */
             function detectMobile() {
                 const ua = navigator.userAgent || "";
                 const likelyMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
-                const smallScreen =
+                const small =
                     Math.min(window.innerWidth, window.innerHeight) < 900;
-                return likelyMobile || smallScreen;
+                return likelyMobile || small;
             }
-
-            async function loadData() {
-                // Theme + font
-                const theme = localStorage.getItem("theme") || "dark";
-                document.documentElement.setAttribute("data-theme", theme);
-                const fs = +(localStorage.getItem("fsPx") || 28);
-                document.documentElement.style.setProperty("--fs", fs + "px");
-
-                state.isMobile = detectMobile();
-                document.body.classList.toggle("mobile", state.isMobile);
-
-                const res = await fetch("bible.json", { cache: "no-cache" });
-                state.data = await res.json();
-
-                buildSidebarAndOrder(); // no-op on mobile (hidden), but we still compute order
-                buildDropdown();
-                wireControls();
-                renderChapters();
-                renderChapter();
+            function presentBooksSet() {
+                return new Set(state.data.books.map((b) => b.name));
             }
-
-            function wireControls() {
-                // Theme
+            function bookByIdx(i) {
+                const name = state.orderedBooks[i];
+                return state.data.books.find((b) => b.name === name);
+            }
+            function idxOfBook(name) {
+                return state.orderedBooks.findIndex((n) => n === name);
+            }
+            function saveReading() {
+                const name =
+                    state.orderedBooks[state.bookIdx] || DEFAULT_BOOK_NAME;
+                const chap =
+                    bookByIdx(state.bookIdx)?.chapters?.[state.chapIdx]?.c ||
+                    DEFAULT_CHAPTER_NO;
+                localStorage.setItem("bookName", name);
+                localStorage.setItem("chapterNo", String(chap));
+            }
+            function loadReading() {
+                const name =
+                    localStorage.getItem("bookName") || DEFAULT_BOOK_NAME;
+                const chapNo = parseInt(
+                    localStorage.getItem("chapterNo") || DEFAULT_CHAPTER_NO,
+                    10,
+                );
+                return { name, chapNo };
+            }
+            function showBible() {
+                document.getElementById("reader").classList.remove("hidden");
+                document.getElementById("aboutChurch").classList.add("hidden");
+            }
+            function showChurch() {
+                document.getElementById("reader").classList.add("hidden");
                 document
-                    .getElementById("themeBtn")
+                    .getElementById("aboutChurch")
+                    .classList.remove("hidden");
+            }
+
+            /* ---- order ---- */
+            function buildOrder() {
+                const present = presentBooksSet();
+                state.orderedBooks = [];
+                BOOKS_META.forEach((sec) => {
+                    sec.groups.forEach((gr) => {
+                        gr.books.forEach((n) => {
+                            if (present.has(n)) state.orderedBooks.push(n);
+                        });
+                    });
+                });
+            }
+
+            /* ---- header & menu ---- */
+            function wireHeader() {
+                const open = () => document.body.classList.add("drawer-open");
+                const close = () =>
+                    document.body.classList.remove("drawer-open");
+                document
+                    .getElementById("menuBtnLeft")
+                    .addEventListener("click", open);
+                document
+                    .getElementById("menuBtnRight")
+                    .addEventListener("click", open);
+                document
+                    .getElementById("backdrop")
+                    .addEventListener("click", close);
+                window.addEventListener("keydown", (e) => {
+                    if (e.key === "Escape") close();
+                });
+
+                // prev/next buttons
+                document
+                    .getElementById("prevBtn")
                     .addEventListener("click", () => {
-                        const cur =
-                            document.documentElement.getAttribute(
-                                "data-theme",
-                            ) || "dark";
-                        const next = cur === "dark" ? "light" : "dark";
-                        document.documentElement.setAttribute(
-                            "data-theme",
-                            next,
-                        );
-                        localStorage.setItem("theme", next);
+                        gotoPrev();
                     });
-
-                // Desktop font slider
-                const fsInput = document.getElementById("fs");
-                const fsVal = document.getElementById("fsVal");
-                const currentFs =
-                    parseInt(
-                        getComputedStyle(
-                            document.documentElement,
-                        ).getPropertyValue("--fs"),
-                    ) || 28;
-                fsInput.value = currentFs;
-                fsVal.textContent = currentFs + "px";
-                fsInput.addEventListener("input", (e) => {
-                    const px = +e.target.value;
-                    document.documentElement.style.setProperty(
-                        "--fs",
-                        px + "px",
-                    );
-                    fsVal.textContent = px + "px";
-                    localStorage.setItem("fsPx", String(px));
-                });
-
-                // Mobile A-/A+
-                const fsDec = document.getElementById("fsDec");
-                const fsInc = document.getElementById("fsInc");
-                if (fsDec && fsInc) {
-                    const step = 2;
-                    const clamp = (v) => Math.max(14, Math.min(36, v));
-                    const setPx = (px) => {
-                        document.documentElement.style.setProperty(
-                            "--fs",
-                            px + "px",
-                        );
-                        localStorage.setItem("fsPx", String(px));
-                        // keep slider in sync (hidden on mobile but ok)
-                        document.getElementById("fs").value = px;
-                        document.getElementById("fsVal").textContent =
-                            px + "px";
-                    };
-                    fsDec.addEventListener("click", () => {
-                        const cur = parseInt(
-                            getComputedStyle(
-                                document.documentElement,
-                            ).getPropertyValue("--fs"),
-                        );
-                        setPx(clamp(cur - step));
-                    });
-                    fsInc.addEventListener("click", () => {
-                        const cur = parseInt(
-                            getComputedStyle(
-                                document.documentElement,
-                            ).getPropertyValue("--fs"),
-                        );
-                        setPx(clamp(cur + step));
-                    });
-                }
-
-                // Search
-                document.getElementById("q").addEventListener("input", (e) => {
-                    state.q = e.target.value.trim();
-                    if (state.q) renderSearch(state.q);
-                    else renderChapter();
-                });
-
-                // Book dropdown
                 document
-                    .getElementById("bookSel")
-                    .addEventListener("change", (e) => {
-                        state.bookIdx = +e.target.value;
-                        state.chapIdx = 0;
-                        renderChapters();
-                        renderChapter();
-                        scrollSidebarToActive();
+                    .getElementById("nextBtn")
+                    .addEventListener("click", () => {
+                        gotoNext();
                     });
 
-                // Resize: re-detect mobile if rotated
+                // keyboard arrows (desktop)
+                window.addEventListener("keydown", (e) => {
+                    if (e.key === "ArrowLeft") {
+                        e.preventDefault();
+                        gotoPrev();
+                    }
+                    if (e.key === "ArrowRight") {
+                        e.preventDefault();
+                        gotoNext();
+                    }
+                });
+
+                // swipe (mobile)
+                const reader = document.getElementById("reader");
+                let x0 = null,
+                    y0 = null,
+                    t0 = 0;
+                const THRESH = 50; // px
+                reader.addEventListener(
+                    "touchstart",
+                    (ev) => {
+                        if (!state.isMobile) return;
+                        const t = ev.changedTouches[0];
+                        x0 = t.clientX;
+                        y0 = t.clientY;
+                        t0 = Date.now();
+                    },
+                    { passive: true },
+                );
+                reader.addEventListener(
+                    "touchend",
+                    (ev) => {
+                        if (!state.isMobile || x0 === null) return;
+                        const t = ev.changedTouches[0];
+                        const dx = t.clientX - x0,
+                            dy = t.clientY - y0;
+                        if (
+                            Math.abs(dx) > Math.abs(dy) &&
+                            Math.abs(dx) > THRESH
+                        ) {
+                            if (dx < 0) gotoNext();
+                            else gotoPrev();
+                        }
+                        x0 = y0 = null;
+                    },
+                    { passive: true },
+                );
+
+                // layout change on resize
                 window.addEventListener("resize", () => {
-                    const mobile = detectMobile();
-                    if (mobile !== state.isMobile) {
-                        state.isMobile = mobile;
+                    const now = detectMobile();
+                    if (now !== state.isMobile) {
+                        state.isMobile = now;
                         document.body.classList.toggle(
                             "mobile",
                             state.isMobile,
                         );
+                        document.getElementById(
+                            "bookTitleCenter",
+                        ).style.display = state.isMobile ? "inline" : "none";
+                        updateTitles();
                     }
                 });
             }
 
-            function presentBooksSet() {
-                return new Set(state.data.books.map((b) => b.name));
+            /* ---- titles + chapters ---- */
+            function updateTitles() {
+                const name = state.orderedBooks[state.bookIdx] || "—";
+                document.getElementById("bookTitle").textContent = name;
+                document.getElementById("bookTitleCenter").textContent = name;
             }
-
-            function buildSidebarAndOrder() {
-                const present = presentBooksSet();
-                state.orderedBooks = [];
-                let idx = 0;
-
-                const sidebar = document.getElementById("sidebar");
-                sidebar.innerHTML = "";
-
-                BOOKS_META.forEach((section) => {
-                    // Heading (舊約/新約)
-                    if (!state.isMobile) {
-                        const h = document.createElement("div");
-                        h.className = "group-title";
-                        h.textContent = section.heading;
-                        sidebar.appendChild(h);
-                    }
-                    section.groups.forEach((gr) => {
-                        if (!state.isMobile) {
-                            const sub = document.createElement("div");
-                            sub.className = "sub-title";
-                            sub.textContent = gr.sub;
-                            sidebar.appendChild(sub);
-                        }
-                        const list = document.createElement("div");
-                        list.className = "book-list";
-
-                        gr.books.forEach((name) => {
-                            if (!present.has(name)) return;
-                            state.orderedBooks.push(name);
-                            if (!state.isMobile) {
-                                const row = document.createElement("div");
-                                row.className = "book";
-                                const btn = document.createElement("button");
-                                btn.textContent = name;
-                                btn.onclick = () => {
-                                    state.bookIdx = idxOfBook(name);
-                                    state.chapIdx = 0;
-                                    updateDropdownSelection();
-                                    renderChapters();
-                                    renderChapter();
-                                    highlightActiveBookInSidebar();
-                                };
-                                row.appendChild(btn);
-                                list.appendChild(row);
-                            }
-                        });
-                        if (!state.isMobile) sidebar.appendChild(list);
-                    });
-                });
-                highlightActiveBookInSidebar();
-            }
-
-            function idxOfBook(name) {
-                return state.orderedBooks.findIndex((n) => n === name);
-            }
-
-            function highlightActiveBookInSidebar() {
-                if (state.isMobile) return;
-                const sidebar = document.getElementById("sidebar");
-                sidebar
-                    .querySelectorAll(".book button")
-                    .forEach((b) => b.classList.remove("active"));
-                const activeName = state.orderedBooks[state.bookIdx];
-                const btns = [
-                    ...sidebar.querySelectorAll(".book button"),
-                ].filter((b) => b.textContent === activeName);
-                if (btns[0]) btns[0].classList.add("active");
-            }
-
-            function scrollSidebarToActive() {
-                if (state.isMobile) return;
-                const sidebar = document.getElementById("sidebar");
-                const activeName = state.orderedBooks[state.bookIdx];
-                const btn = [...sidebar.querySelectorAll(".book button")].find(
-                    (b) => b.textContent === activeName,
-                );
-                if (btn) btn.scrollIntoView({ block: "nearest" });
-            }
-
-            function buildDropdown() {
-                const sel = document.getElementById("bookSel");
-                sel.innerHTML = "";
-                state.orderedBooks.forEach((name, i) => {
-                    const opt = document.createElement("option");
-                    opt.value = i;
-                    opt.textContent = name;
-                    sel.appendChild(opt);
-                });
-                updateDropdownSelection();
-            }
-
-            function updateDropdownSelection() {
-                const sel = document.getElementById("bookSel");
-                sel.value = String(state.bookIdx);
-            }
-
-            function bookByOrderedIndex(i) {
-                const name = state.orderedBooks[i];
-                return state.data.books.find((b) => b.name === name);
-            }
-
             function renderChapters() {
                 const area = document.getElementById("chapterArea");
                 area.innerHTML = "";
-                const book = bookByOrderedIndex(state.bookIdx);
+                const book = bookByIdx(state.bookIdx);
+                updateTitles();
                 if (!book) {
-                    area.textContent = "本書卷不存在";
                     return;
                 }
                 book.chapters.forEach((ch, i) => {
@@ -669,74 +655,240 @@
                     btn.className = i === state.chapIdx ? "active" : "";
                     btn.onclick = () => {
                         state.chapIdx = i;
-                        document.getElementById("q").value = "";
-                        state.q = "";
+                        saveReading();
                         renderChapters();
-                        renderChapter();
+                        renderChapter(true);
+                        showBible();
                     };
                     area.appendChild(btn);
                 });
             }
-
-            function renderChapter() {
+            function renderChapter(scrollToFirst = false) {
                 const reader = document.getElementById("reader");
-                const info = document.getElementById("searchInfo");
-                info.textContent = "";
-                const book = bookByOrderedIndex(state.bookIdx);
+                const book = bookByIdx(state.bookIdx);
                 const ch = book?.chapters?.[state.chapIdx];
                 if (!ch) {
                     reader.innerHTML = '<div class="muted">本書沒有章節</div>';
                     return;
                 }
-
-                let html = `<div class="muted">${book.name} 第 ${ch.c} 章</div>`;
+                let html = `<div class="muted" id="top">${book.name} 第 ${ch.c} 章</div>`;
                 ch.verses.forEach((v) => {
-                    html += `<div class="verse"><span class="vno">${ch.c}:${v.v}</span>${escapeHtml(v.t)}</div>`;
+                    const id = v.v === 1 ? ` id="v-${ch.c}-1"` : "";
+                    html += `<div class="verse"${id}><span class="vno">${ch.c}:${v.v}</span>${escapeHtml(v.t)}</div>`;
                 });
                 reader.innerHTML = html;
-                highlightActiveBookInSidebar();
+
+                // scroll so the chapter header is just below the sticky header
+                requestAnimationFrame(() => {
+                    const headerH =
+                        document.querySelector("header")?.offsetHeight || 0;
+                    const topEl =
+                        document.getElementById("top") || // your "書卷 第X章" line
+                        document.getElementById(`v-${ch.c}-1`) || // fallback: first verse
+                        reader; // fallback: container
+                    const y =
+                        topEl.getBoundingClientRect().top +
+                        window.scrollY -
+                        headerH -
+                        8; // 8px cushion
+                    window.scrollTo({ top: Math.max(0, y), behavior: "auto" });
+                });
             }
 
-            function renderSearch(q) {
-                const reader = document.getElementById("reader");
-                const info = document.getElementById("searchInfo");
-                const re = new RegExp(
-                    q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-                    "i",
-                );
-                let total = 0;
-                let out = [];
-                for (const name of state.orderedBooks) {
-                    const book = state.data.books.find((b) => b.name === name);
-                    if (!book) continue;
-                    for (const ch of book.chapters) {
-                        let printedHeader = false;
-                        for (const v of ch.verses) {
-                            if (re.test(v.t)) {
-                                total++;
-                                if (!printedHeader) {
-                                    out.push(
-                                        `<div class="muted" style="margin-top:.8rem">${book.name} 第 ${ch.c} 章</div>`,
-                                    );
-                                    printedHeader = true;
-                                }
-                                const txt = escapeHtml(v.t).replace(
-                                    re,
-                                    (m) => `<mark>${m}</mark>`,
-                                );
-                                out.push(
-                                    `<div class="verse"><span class="vno">${ch.c}:${v.v}</span>${txt}</div>`,
-                                );
-                            }
-                        }
+            /* ---- prev/next navigation with cross-book boundaries ---- */
+            function gotoPrev() {
+                const book = bookByIdx(state.bookIdx);
+                if (!book) return;
+                if (state.chapIdx > 0) {
+                    state.chapIdx--;
+                } else {
+                    if (state.bookIdx > 0) {
+                        state.bookIdx--;
+                        const prevBook = bookByIdx(state.bookIdx);
+                        state.chapIdx = Math.max(
+                            0,
+                            (prevBook?.chapters?.length || 1) - 1,
+                        );
+                    } else {
+                        // at very first chapter of first book → stay
+                        return;
                     }
                 }
-                info.textContent = total ? `找到 ${total} 筆` : "未找到結果";
-                reader.innerHTML = out.length
-                    ? out.join("")
-                    : '<div class="muted">沒有符合的結果</div>';
+                saveReading();
+                renderChapters();
+                renderChapter(true);
+                showBible();
+            }
+            function gotoNext() {
+                const book = bookByIdx(state.bookIdx);
+                if (!book) return;
+                if (state.chapIdx < book.chapters.length - 1) {
+                    state.chapIdx++;
+                } else {
+                    if (state.bookIdx < state.orderedBooks.length - 1) {
+                        state.bookIdx++;
+                        state.chapIdx = 0;
+                    } else {
+                        // at last chapter of last book → stay
+                        return;
+                    }
+                }
+                saveReading();
+                renderChapters();
+                renderChapter(true);
+                showBible();
             }
 
+            /* ---- drawer (accordion + 前往) ---- */
+            function buildDrawer() {
+                const root = document.getElementById("drawerContent");
+                root.innerHTML = "";
+
+                // footer controls
+                const setPx = (px) => {
+                    document.documentElement.style.setProperty(
+                        "--fs",
+                        px + "px",
+                    );
+                    localStorage.setItem("fsPx", String(px));
+                };
+                const clamp = (v) => Math.max(14, Math.min(36, v));
+                document.getElementById("fsDec").onclick = () => {
+                    const cur =
+                        parseInt(
+                            getComputedStyle(
+                                document.documentElement,
+                            ).getPropertyValue("--fs"),
+                        ) || 28;
+                    setPx(clamp(cur - 2));
+                };
+                document.getElementById("fsInc").onclick = () => {
+                    const cur =
+                        parseInt(
+                            getComputedStyle(
+                                document.documentElement,
+                            ).getPropertyValue("--fs"),
+                        ) || 28;
+                    setPx(clamp(cur + 2));
+                };
+                document.getElementById("themeBtn").onclick = () => {
+                    const cur =
+                        document.documentElement.getAttribute("data-theme") ||
+                        "dark";
+                    const next = cur === "dark" ? "light" : "dark";
+                    document.documentElement.setAttribute("data-theme", next);
+                    localStorage.setItem("theme", next);
+                };
+                document.getElementById("churchBtn").onclick = () => {
+                    showChurch();
+                    document.body.classList.remove("drawer-open");
+                };
+
+                const present = presentBooksSet();
+                BOOKS_META.forEach((section) => {
+                    const h = document.createElement("div");
+                    h.className = "group-title";
+                    h.textContent = section.heading;
+                    root.appendChild(h);
+
+                    section.groups.forEach((gr) => {
+                        const sub = document.createElement("div");
+                        sub.className = "sub-title";
+                        sub.textContent = gr.sub;
+                        root.appendChild(sub);
+
+                        gr.books.forEach((name) => {
+                            if (!present.has(name)) return;
+                            const book = state.data.books.find(
+                                (b) => b.name === name,
+                            );
+
+                            const bookRow = document.createElement("div");
+                            bookRow.className = "book-item";
+                            const left = document.createElement("div");
+                            left.className = "book-left";
+                            const arrow = document.createElement("span");
+                            arrow.className = "arrow";
+                            arrow.textContent = "▶";
+                            const label = document.createElement("span");
+                            label.className = "book-name";
+                            label.textContent = name;
+                            left.append(arrow, label);
+
+                            // 前往 button (go to chapter 1)
+                            const goBtn = document.createElement("button");
+                            goBtn.className = "pill";
+                            goBtn.textContent = "前往";
+                            goBtn.title = "前往第 1 章";
+
+                            bookRow.append(left, goBtn);
+                            root.appendChild(bookRow);
+
+                            const chapList = document.createElement("div");
+                            chapList.className = "chap-list";
+                            (book?.chapters || []).forEach((ch, i) => {
+                                const cbtn = document.createElement("button");
+                                cbtn.className = "pill";
+                                cbtn.textContent = ch.c;
+                                cbtn.onclick = (ev) => {
+                                    ev.stopPropagation();
+                                    state.bookIdx = idxOfBook(name);
+                                    state.chapIdx = i;
+                                    saveReading();
+                                    renderChapters();
+                                    renderChapter(true);
+                                    showBible();
+                                    document.body.classList.remove(
+                                        "drawer-open",
+                                    );
+                                };
+                                chapList.appendChild(cbtn);
+                            });
+                            root.appendChild(chapList);
+
+                            // accordion open/close + jump to chapter 1
+                            left.addEventListener("click", () => {
+                                if (
+                                    state.openBookEl &&
+                                    state.openBookEl !== bookRow
+                                ) {
+                                    state.openBookEl.classList.remove("open");
+                                }
+                                const willOpen =
+                                    !bookRow.classList.contains("open");
+                                if (willOpen) {
+                                    bookRow.classList.add("open");
+                                    state.openBookEl = bookRow;
+                                } else {
+                                    bookRow.classList.remove("open");
+                                    state.openBookEl = null;
+                                }
+
+                                state.bookIdx = idxOfBook(name);
+                                state.chapIdx = 0;
+                                saveReading();
+                                renderChapters();
+                                renderChapter(true);
+                                showBible();
+                            });
+
+                            // 前往 → always jump to chapter 1 and close drawer
+                            goBtn.addEventListener("click", (ev) => {
+                                ev.stopPropagation();
+                                state.bookIdx = idxOfBook(name);
+                                state.chapIdx = 0;
+                                saveReading();
+                                renderChapters();
+                                renderChapter(true);
+                                showBible();
+                                document.body.classList.remove("drawer-open");
+                            });
+                        });
+                    });
+                });
+            }
+
+            /* ---- utilities ---- */
             function escapeHtml(s) {
                 return s
                     .replace(/&/g, "&amp;")
@@ -744,11 +896,54 @@
                     .replace(/>/g, "&gt;");
             }
 
-            // PWA SW
+            /* ---- boot ---- */
+            async function loadData() {
+                // theme & font
+                const theme = localStorage.getItem("theme") || "dark";
+                document.documentElement.setAttribute("data-theme", theme);
+                const fs = +(localStorage.getItem("fsPx") || 28);
+                document.documentElement.style.setProperty("--fs", fs + "px");
+
+                state.isMobile = detectMobile();
+                document.body.classList.toggle("mobile", state.isMobile);
+                document.getElementById("bookTitleCenter").style.display =
+                    state.isMobile ? "inline" : "none";
+
+                const res = await fetch("bible.json", { cache: "no-cache" });
+                state.data = await res.json();
+
+                buildOrder();
+
+                // restore last reading position (or default to 馬太福音 1)
+                const saved = loadReading();
+                const bIdx = idxOfBook(saved.name);
+                state.bookIdx =
+                    bIdx >= 0
+                        ? bIdx
+                        : idxOfBook(DEFAULT_BOOK_NAME) >= 0
+                          ? idxOfBook(DEFAULT_BOOK_NAME)
+                          : 0;
+                const book = bookByIdx(state.bookIdx);
+                let cIdx = 0;
+                if (book && Array.isArray(book.chapters)) {
+                    const found = book.chapters.findIndex(
+                        (c) => Number(c.c) === Number(saved.chapNo),
+                    );
+                    cIdx = found >= 0 ? found : 0;
+                }
+                state.chapIdx = cIdx;
+
+                buildDrawer();
+                wireHeader();
+                renderChapters();
+                renderChapter(true); // 初次載入捲到第1節
+                showBible();
+            }
+
             if ("serviceWorker" in navigator) {
-                window.addEventListener("load", () => {
-                    navigator.serviceWorker.register("sw.js");
-                });
+                window.addEventListener("load", () =>
+                    navigator.serviceWorker.register("sw.js"),
+                );
             }
 
             loadData();
