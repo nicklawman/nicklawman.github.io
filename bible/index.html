@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="manifest" href="manifest.webmanifest" />
+        <meta name="theme-color" content="#0d6efd" />
+        <title>聖經和合本</title>
+        <style>
+            :root {
+                /* THEME (dark) */
+                --bg: #0b0e12;
+                --fg: #e8e8e8;
+                --muted: #9aa0a6;
+                --acc: #0d6efd;
+                --card: #151a20;
+                --line: #24303a;
+                --chip: #10161c;
+                --chip-line: #2b3947;
+                --mark-bg: #2b3f64;
+                /* FONT size (default ≈ 2x previous) */
+                --fs: 1.8rem;
+            }
+            :root[data-theme="light"] {
+                --bg: #ffffff;
+                --fg: #111827;
+                --muted: #6b7280;
+                --acc: #0d6efd;
+                --card: #f9fafb;
+                --line: #e5e7eb;
+                --chip: #ffffff;
+                --chip-line: #e5e7eb;
+                --mark-bg: #fde68a;
+            }
+            html,
+            body {
+                margin: 0;
+                height: 100%;
+                background: var(--bg);
+                color: var(--fg);
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    Segoe UI,
+                    Roboto,
+                    Helvetica,
+                    Arial;
+            }
+            body {
+                font-size: var(--fs);
+            }
+            header {
+                position: sticky;
+                top: 0;
+                background: var(--card);
+                padding: 0.6rem 0.9rem;
+                border-bottom: 1px solid var(--line);
+                z-index: 10;
+                display: flex;
+                gap: 0.75rem;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            h1 {
+                font-size: 1.05rem;
+                margin: 0;
+            }
+            select,
+            input[type="search"],
+            input[type="range"] {
+                background: var(--chip);
+                color: var(--fg);
+                border: 1px solid var(--chip-line);
+                border-radius: 0.5rem;
+                padding: 0.4rem 0.6rem;
+                font-size: 0.9rem;
+            }
+            input[type="range"] {
+                padding: 0;
+                height: 1.75rem;
+            }
+            .content {
+                display: grid;
+                grid-template-columns: 320px 1fr;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            .sidebar {
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-radius: 0.5rem;
+                padding: 0.75rem;
+                overflow: auto;
+                max-height: calc(100dvh - 92px);
+            }
+            .group-title {
+                margin: 0.75rem 0 0.25rem;
+                font-weight: 700;
+            }
+            .sub-title {
+                margin: 0.5rem 0 0.25rem;
+                font-weight: 600;
+                color: var(--muted);
+                font-size: 0.95rem;
+            }
+            .book-list {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+                margin: 0.25rem 0 0.75rem;
+            }
+            .book {
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+            }
+            .book button {
+                background: transparent;
+                color: var(--fg);
+                border: 0;
+                cursor: pointer;
+                text-align: left;
+                padding: 0.25rem 0.35rem;
+                border-radius: 0.3rem;
+            }
+            .book button:hover {
+                background: var(--chip);
+                border: 1px solid var(--chip-line);
+            }
+            .chapters {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.35rem;
+                margin: 0.25rem 0;
+            }
+            .chapters button {
+                background: var(--chip);
+                border: 1px solid var(--chip-line);
+                color: var(--fg);
+                padding: 0.3rem 0.45rem;
+                border-radius: 0.4rem;
+                cursor: pointer;
+                font-size: 0.95rem;
+            }
+            .chapters button.active {
+                background: var(--acc);
+                border-color: var(--acc);
+                color: #fff;
+            }
+            .verses {
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-radius: 0.5rem;
+                padding: 1rem;
+                line-height: 1.8;
+                max-width: 80ch;
+            }
+            .verse {
+                margin: 0.12rem 0;
+            }
+            .vno {
+                color: var(--muted);
+                font-size: 0.9rem;
+                margin-right: 0.35rem;
+            }
+            .muted {
+                color: var(--muted);
+            }
+            .toolbar {
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .badge {
+                display: inline-block;
+                background: #152237;
+                border: 1px solid #20314a;
+                color: #aac4ff;
+                font-size: 0.75rem;
+                padding: 0.1rem 0.4rem;
+                border-radius: 0.4rem;
+                margin-left: 0.5rem;
+            }
+            .search-info {
+                margin-left: auto;
+                font-size: 0.9rem;
+                color: var(--muted);
+            }
+            .toggle {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                padding: 0.25rem 0.45rem;
+                border: 1px solid var(--chip-line);
+                border-radius: 0.5rem;
+                background: var(--chip);
+                cursor: pointer;
+                font-size: 0.9rem;
+            }
+            mark {
+                background: var(--mark-bg);
+                color: inherit;
+                padding: 0.05rem 0.15rem;
+                border-radius: 0.2rem;
+            }
+            @media (max-width: 980px) {
+                .content {
+                    grid-template-columns: 1fr;
+                }
+                .sidebar {
+                    max-height: unset;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>聖經和合本 <span class="badge">PWA</span></h1>
+
+            <div class="toolbar">
+                <!-- Theme toggle -->
+                <button id="themeBtn" class="toggle" title="切換主題">
+                    🌞 / 🌚
+                </button>
+
+                <!-- Font size slider -->
+                <label class="muted" for="fs">字體：</label>
+                <input
+                    id="fs"
+                    type="range"
+                    min="14"
+                    max="36"
+                    step="1"
+                    value="28"
+                />
+                <span id="fsVal" class="muted">28px</span>
+
+                <!-- Book dropdown (mirrors the left list order & grouping) -->
+                <label class="muted">書卷：</label>
+                <select id="bookSel"></select>
+
+                <!-- Chapter buttons -->
+                <span id="chapterArea" class="chapters"></span>
+
+                <!-- Search -->
+                <input
+                    id="q"
+                    type="search"
+                    placeholder="全文搜尋（離線）"
+                    style="min-width: 16ch"
+                />
+            </div>
+
+            <div class="search-info" id="searchInfo"></div>
+        </header>
+
+        <div class="content">
+            <aside class="sidebar" id="sidebar">
+                <!-- Filled by JS: groups, subheadings, 66 books -->
+            </aside>
+            <main>
+                <div id="reader" class="verses"></div>
+            </main>
+        </div>
+
+        <script>
+            /* ---------- Canonical groups & order (66) ---------- */
+            const BOOKS_META = [
+                {
+                    heading: "舊約",
+                    groups: [
+                        {
+                            sub: "摩西五書",
+                            books: [
+                                "創世記",
+                                "出埃及記",
+                                "利未記",
+                                "民數記",
+                                "申命記",
+                            ],
+                        },
+                        {
+                            sub: "歷史書",
+                            books: [
+                                "約書亞記",
+                                "士師記",
+                                "路得記",
+                                "撒母耳記上",
+                                "撒母耳記下",
+                                "列王紀上",
+                                "列王紀下",
+                                "歷代志上",
+                                "歷代志下",
+                                "以斯拉記",
+                                "尼希米記",
+                                "以斯帖記",
+                            ],
+                        },
+                        {
+                            sub: "詩歌智慧書",
+                            books: ["約伯記", "詩篇", "箴言", "傳道書", "雅歌"],
+                        },
+                        {
+                            sub: "大先知書",
+                            books: [
+                                "以賽亞書",
+                                "耶利米書",
+                                "耶利米哀歌",
+                                "以西結書",
+                                "但以理書",
+                            ],
+                        },
+                        {
+                            sub: "小先知書",
+                            books: [
+                                "何西阿書",
+                                "約珥書",
+                                "阿摩司書",
+                                "俄巴底亞書",
+                                "約拿書",
+                                "彌迦書",
+                                "那鴻書",
+                                "哈巴谷書",
+                                "西番雅書",
+                                "哈該書",
+                                "撒迦利亞書",
+                                "瑪拉基書",
+                            ],
+                        },
+                    ],
+                },
+                {
+                    heading: "新約",
+                    groups: [
+                        {
+                            sub: "福音書",
+                            books: [
+                                "馬太福音",
+                                "馬可福音",
+                                "路加福音",
+                                "約翰福音",
+                            ],
+                        },
+                        {
+                            sub: "使徒行傳-by 路加：保羅的希臘好友",
+                            books: ["使徒行傳"],
+                        },
+                        {
+                            sub: "保羅書信",
+                            books: [
+                                "羅馬書",
+                                "哥林多前書",
+                                "哥林多後書",
+                                "加拉太書",
+                                "以弗所書",
+                                "腓立比書",
+                                "歌羅西書",
+                                "帖撒羅尼迦前書",
+                                "帖撒羅尼迦後書",
+                                "提摩太前書",
+                                "提摩太後書",
+                                "提多書",
+                                "腓利門書",
+                                "希伯來書",
+                            ],
+                        },
+                        { sub: "by雅各：耶穌的弟弟", books: ["雅各書"] },
+                        {
+                            sub: "by 彼得: 使徒",
+                            books: ["彼得前書", "彼得後書"],
+                        },
+                        {
+                            sub: "by 約翰：使徒",
+                            books: ["約翰一書", "約翰二書", "約翰三書"],
+                        },
+                        { sub: " by猶大: 耶穌弟弟", books: ["猶大書"] },
+                        {
+                            sub: " by 約翰：可能是使徒”, 書卷",
+                            books: ["啟示錄"],
+                        },
+                    ],
+                },
+            ];
+
+            // If some book names in DB differ slightly, we will only show those present.
+            const state = {
+                data: null,
+                // flattened order of books from BOOKS_META, filtered by presence in data
+                orderedBooks: [],
+                bookIdx: 0,
+                chapIdx: 0,
+                q: "",
+            };
+
+            async function loadData() {
+                // restore theme + font size
+                const theme = localStorage.getItem("theme") || "dark";
+                document.documentElement.setAttribute("data-theme", theme);
+                const fs = +(localStorage.getItem("fsPx") || 28);
+                document.documentElement.style.setProperty("--fs", fs + "px");
+
+                const res = await fetch("bible.json", { cache: "no-cache" });
+                state.data = await res.json();
+
+                buildSidebarAndOrder();
+                buildDropdown();
+                wireControls();
+                renderChapters();
+                renderChapter();
+            }
+
+            function wireControls() {
+                // Theme toggle
+                const themeBtn = document.getElementById("themeBtn");
+                themeBtn.addEventListener("click", () => {
+                    const cur =
+                        document.documentElement.getAttribute("data-theme") ||
+                        "dark";
+                    const next = cur === "dark" ? "light" : "dark";
+                    document.documentElement.setAttribute("data-theme", next);
+                    localStorage.setItem("theme", next);
+                });
+
+                // Font size
+                const fsInput = document.getElementById("fs");
+                const fsVal = document.getElementById("fsVal");
+                const currentFs =
+                    parseInt(
+                        getComputedStyle(
+                            document.documentElement,
+                        ).getPropertyValue("--fs"),
+                    ) || 28;
+                fsInput.value = currentFs;
+                fsVal.textContent = currentFs + "px";
+                fsInput.addEventListener("input", (e) => {
+                    const px = +e.target.value;
+                    document.documentElement.style.setProperty(
+                        "--fs",
+                        px + "px",
+                    );
+                    fsVal.textContent = px + "px";
+                    localStorage.setItem("fsPx", String(px));
+                });
+
+                // Search
+                document.getElementById("q").addEventListener("input", (e) => {
+                    state.q = e.target.value.trim();
+                    if (state.q) renderSearch(state.q);
+                    else renderChapter();
+                });
+
+                // Book dropdown
+                document
+                    .getElementById("bookSel")
+                    .addEventListener("change", (e) => {
+                        state.bookIdx = +e.target.value;
+                        state.chapIdx = 0;
+                        renderChapters();
+                        renderChapter();
+                        scrollSidebarToActive();
+                    });
+            }
+
+            function presentBooksSet() {
+                // names present in data
+                return new Set(state.data.books.map((b) => b.name));
+            }
+
+            function buildSidebarAndOrder() {
+                const present = presentBooksSet();
+                const sidebar = document.getElementById("sidebar");
+                sidebar.innerHTML = "";
+
+                // Build flattened order and sidebar UI
+                state.orderedBooks = [];
+                let indexCounter = 0;
+
+                BOOKS_META.forEach((section) => {
+                    // Heading (舊約/新約)
+                    const h = document.createElement("div");
+                    h.className = "group-title";
+                    h.textContent = section.heading;
+                    sidebar.appendChild(h);
+
+                    section.groups.forEach((gr) => {
+                        const sub = document.createElement("div");
+                        sub.className = "sub-title";
+                        sub.textContent = gr.sub;
+                        sidebar.appendChild(sub);
+
+                        const list = document.createElement("div");
+                        list.className = "book-list";
+
+                        gr.books.forEach((name) => {
+                            if (!present.has(name)) return; // skip if missing from data
+                            const idx = indexCounter++;
+                            state.orderedBooks.push(name);
+                            const row = document.createElement("div");
+                            row.className = "book";
+                            const btn = document.createElement("button");
+                            btn.textContent = name;
+                            btn.onclick = () => {
+                                state.bookIdx = idx;
+                                state.chapIdx = 0;
+                                updateDropdownSelection();
+                                renderChapters();
+                                renderChapter();
+                                highlightActiveBookInSidebar();
+                            };
+                            row.appendChild(btn);
+                            list.appendChild(row);
+                        });
+
+                        sidebar.appendChild(list);
+                    });
+                });
+
+                highlightActiveBookInSidebar();
+            }
+
+            function highlightActiveBookInSidebar() {
+                const sidebar = document.getElementById("sidebar");
+                // Clear all highlights
+                sidebar
+                    .querySelectorAll(".book button")
+                    .forEach((b) => b.classList.remove("active"));
+                // Highlight current
+                const activeName = state.orderedBooks[state.bookIdx];
+                const btns = [
+                    ...sidebar.querySelectorAll(".book button"),
+                ].filter((b) => b.textContent === activeName);
+                if (btns[0]) btns[0].classList.add("active");
+            }
+
+            function scrollSidebarToActive() {
+                const sidebar = document.getElementById("sidebar");
+                const activeName = state.orderedBooks[state.bookIdx];
+                const btn = [...sidebar.querySelectorAll(".book button")].find(
+                    (b) => b.textContent === activeName,
+                );
+                if (btn) btn.scrollIntoView({ block: "nearest" });
+            }
+
+            function buildDropdown() {
+                const sel = document.getElementById("bookSel");
+                sel.innerHTML = "";
+
+                state.orderedBooks.forEach((name, i) => {
+                    const opt = document.createElement("option");
+                    opt.value = i;
+                    opt.textContent = name;
+                    sel.appendChild(opt);
+                });
+                updateDropdownSelection();
+            }
+
+            function updateDropdownSelection() {
+                const sel = document.getElementById("bookSel");
+                sel.value = String(state.bookIdx);
+            }
+
+            function bookByOrderedIndex(i) {
+                const name = state.orderedBooks[i];
+                return state.data.books.find((b) => b.name === name);
+            }
+
+            function renderChapters() {
+                const area = document.getElementById("chapterArea");
+                area.innerHTML = "";
+                const book = bookByOrderedIndex(state.bookIdx);
+                if (!book) {
+                    area.textContent = "本書卷不存在";
+                    return;
+                }
+                book.chapters.forEach((ch, i) => {
+                    const btn = document.createElement("button");
+                    btn.textContent = ch.c;
+                    btn.className = i === state.chapIdx ? "active" : "";
+                    btn.onclick = () => {
+                        state.chapIdx = i;
+                        document.getElementById("q").value = "";
+                        state.q = "";
+                        renderChapters();
+                        renderChapter();
+                    };
+                    area.appendChild(btn);
+                });
+            }
+
+            function renderChapter() {
+                const reader = document.getElementById("reader");
+                const info = document.getElementById("searchInfo");
+                info.textContent = "";
+                const book = bookByOrderedIndex(state.bookIdx);
+                const ch = book?.chapters?.[state.chapIdx];
+                if (!ch) {
+                    reader.innerHTML = '<div class="muted">本書沒有章節</div>';
+                    return;
+                }
+
+                let html = `<div class="muted">${book.name} 第 ${ch.c} 章</div>`;
+                ch.verses.forEach((v) => {
+                    html += `<div class="verse"><span class="vno">${ch.c}:${v.v}</span>${escapeHtml(v.t)}</div>`;
+                });
+                reader.innerHTML = html;
+                highlightActiveBookInSidebar();
+            }
+
+            function renderSearch(q) {
+                const reader = document.getElementById("reader");
+                const info = document.getElementById("searchInfo");
+                const re = new RegExp(
+                    q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+                    "i",
+                );
+                let total = 0;
+                let out = [];
+                for (const name of state.orderedBooks) {
+                    const book = state.data.books.find((b) => b.name === name);
+                    if (!book) continue;
+                    for (const ch of book.chapters) {
+                        let printedHeader = false;
+                        for (const v of ch.verses) {
+                            if (re.test(v.t)) {
+                                total++;
+                                if (!printedHeader) {
+                                    out.push(
+                                        `<div class="muted" style="margin-top:.8rem">${book.name} 第 ${ch.c} 章</div>`,
+                                    );
+                                    printedHeader = true;
+                                }
+                                const txt = escapeHtml(v.t).replace(
+                                    re,
+                                    (m) => `<mark>${m}</mark>`,
+                                );
+                                out.push(
+                                    `<div class="verse"><span class="vno">${ch.c}:${v.v}</span>${txt}</div>`,
+                                );
+                            }
+                        }
+                    }
+                }
+                info.textContent = total ? `找到 ${total} 筆` : "未找到結果";
+                reader.innerHTML = out.length
+                    ? out.join("")
+                    : '<div class="muted">沒有符合的結果</div>';
+            }
+
+            function escapeHtml(s) {
+                return s
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;");
+            }
+
+            // PWA: keep your existing service worker registration
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    navigator.serviceWorker.register("sw.js");
+                });
+            }
+
+            loadData();
+        </script>
+    </body>
+</html>
