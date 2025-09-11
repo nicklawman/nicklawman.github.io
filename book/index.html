@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="manifest" href="manifest.webmanifest" />
+        <meta name="theme-color" content="#0d6efd" />
+        <title>聖經和合本</title>
+        <style>
+            :root {
+                --bg: #0b0e12;
+                --fg: #e8e8e8;
+                --muted: #aab2bb;
+                --acc: #0d6efd;
+                --card: #141a22;
+                --line: #2a3947;
+                --chip: #17212b;
+                --chip-line: #304154;
+                --mark-bg: #2b3f64;
+                --btn-bg: #1e2a36;
+                --btn-line: #3a4c60;
+                --btn-fg: #ffffff;
+                --fs: 1.8rem;
+            }
+            :root[data-theme="light"] {
+                --bg: #ffffff;
+                --fg: #111827;
+                --muted: #6b7280;
+                --acc: #0d6efd;
+                --card: #f7fafc;
+                --line: #e5e7eb;
+                --chip: #ffffff;
+                --chip-line: #e5e7eb;
+                --mark-bg: #fde68a;
+                --btn-bg: #ffffff;
+                --btn-line: #d1d5db;
+                --btn-fg: #111827;
+            }
+            html,
+            body {
+                margin: 0;
+                height: 100%;
+                background: var(--bg);
+                color: var(--fg);
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    Segoe UI,
+                    Roboto,
+                    Helvetica,
+                    Arial;
+            }
+            body {
+                font-size: var(--fs);
+            }
+
+            /* Header: cross icon + current book + prev/chapters/next */
+            header {
+                position: sticky;
+                top: 0;
+                z-index: 20;
+                background: var(--card);
+                border-bottom: 1px solid var(--line);
+                padding: 0.6rem 0.9rem;
+                display: grid;
+                grid-template-columns: auto 1fr auto;
+                align-items: center;
+                gap: 0.6rem;
+            }
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 0.6rem;
+            }
+            .book-title {
+                font-weight: 700;
+            }
+            .menu-btn,
+            .pill {
+                background: var(--btn-bg);
+                border: 1px solid var(--btn-line);
+                color: var(--btn-fg);
+                border-radius: 0.6rem;
+                padding: 0.32rem 0.55rem;
+                cursor: pointer;
+                font-size: 1rem;
+            }
+            .chapbar {
+                display: flex;
+                align-items: center;
+                gap: 0.45rem;
+                flex-wrap: wrap;
+            }
+            .chapters {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.35rem;
+            }
+            .chapters button {
+                background: var(--btn-bg);
+                border: 1px solid var(--btn-line);
+                color: var(--btn-fg);
+                padding: 0.28rem 0.5rem;
+                border-radius: 0.45rem;
+                cursor: pointer;
+                font-size: 0.95rem;
+            }
+            .chapters button.active {
+                background: var(--acc);
+                border-color: var(--acc);
+                color: #fff;
+            }
+            .navbtn {
+                font-weight: 700;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+            .verses {
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-radius: 0.6rem;
+                padding: 1rem;
+                line-height: 1.8;
+                max-width: 80ch;
+                touch-action: pan-y;
+                scroll-margin-top: 3.5rem;
+            }
+            .verse {
+                margin: 0.12rem 0;
+            }
+            .vno {
+                color: var(--muted);
+                font-size: 0.9rem;
+                margin-right: 0.35rem;
+            }
+            mark {
+                background: var(--mark-bg);
+                color: inherit;
+                padding: 0.05rem 0.15rem;
+                border-radius: 0.2rem;
+            }
+
+            /* Drawer */
+            .drawer-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.35);
+                backdrop-filter: blur(2px);
+                opacity: 0;
+                pointer-events: none;
+                transition: 0.2s opacity;
+                z-index: 30;
+            }
+            .drawer {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                width: min(92vw, 360px);
+                background: var(--card);
+                border-right: 1px solid var(--line);
+                transform: translateX(-100%);
+                transition: 0.25s transform;
+                z-index: 31;
+                overflow: auto;
+            }
+            body.drawer-open .drawer {
+                transform: translateX(0);
+            }
+            body.drawer-open .drawer-backdrop {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .drawer-header {
+                position: sticky;
+                top: 0;
+                background: var(--card);
+                padding: 0.8rem;
+                border-bottom: 1px solid var(--line);
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            .drawer-title {
+                font-weight: 800;
+            }
+            .group-title {
+                padding: 0.75rem 0.9rem 0.25rem;
+                font-weight: 800;
+            }
+            .sub-title {
+                padding: 0.35rem 0.9rem;
+                font-weight: 700;
+                color: var(--muted);
+                font-size: 0.95rem;
+            }
+
+            .book-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.5rem;
+                padding: 0.45rem 0.75rem;
+                cursor: pointer;
+                border-top: 1px solid var(--line);
+            }
+            .book-left {
+                display: flex;
+                align-items: center;
+                gap: 0.55rem;
+            }
+            .arrow {
+                transition: 0.2s transform;
+                color: var(--fg);
+            }
+            .book-name {
+                color: var(--fg);
+                font-weight: 600;
+            }
+            .book-item.open .arrow {
+                transform: rotate(90deg);
+            }
+            .chap-list {
+                display: none;
+                padding: 0.5rem 0.9rem;
+                gap: 0.35rem;
+                flex-wrap: wrap;
+            }
+            .book-item.open + .chap-list {
+                display: flex;
+            }
+            .drawer-footer {
+                position: sticky;
+                bottom: 0;
+                background: var(--card);
+                border-top: 1px solid var(--line);
+                padding: 0.7rem 0.8rem;
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            /* Mobile / Desktop icon position */
+            body.mobile header {
+                grid-template-columns: 1fr auto;
+            }
+            body.mobile .brand {
+                order: 1;
+                justify-self: start;
+            }
+            body.mobile .rightslot {
+                order: 2;
+                justify-self: end;
+            }
+            @media (min-width: 901px) {
+                .rightslot {
+                    display: none;
+                }
+            } /* desktop: hide rightslot */
+            @media (max-width: 900px) {
+                .leftslot {
+                    display: none;
+                }
+            } /* mobile: hide leftslot */
+
+            .hidden {
+                display: none !important;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <!-- desktop: cross on left -->
+            <div class="brand leftslot">
+                <button id="menuBtnLeft" class="menu-btn" title="選單">
+                    ✝
+                </button>
+                <span class="book-title" id="bookTitle">—</span>
+            </div>
+
+            <!-- center: book title (mobile) + prev / chapters / next -->
+            <div class="chapbar">
+                <span
+                    class="book-title"
+                    id="bookTitleCenter"
+                    style="display: none"
+                    >—</span
+                >
+                <button id="prevBtn" class="pill navbtn" title="上一章">
+                    ‹
+                </button>
+                <span id="chapterArea" class="chapters"></span>
+                <button id="nextBtn" class="pill navbtn" title="下一章">
+                    ›
+                </button>
+            </div>
+
+            <!-- mobile: cross on right -->
+            <div class="rightslot">
+                <button id="menuBtnRight" class="menu-btn" title="選單">
+                    ✝
+                </button>
+            </div>
+        </header>
+
+        <!-- Drawer -->
+        <div class="drawer-backdrop" id="backdrop"></div>
+        <aside class="drawer" id="drawer">
+            <div class="drawer-header">
+                <strong class="drawer-title">選單</strong>
+            </div>
+            <div id="drawerContent"><!-- built by JS --></div>
+            <div class="drawer-footer">
+                <button id="fsDec" class="pill" title="字體變小">A−</button>
+                <button id="fsInc" class="pill" title="字體變大">A+</button>
+                <button id="themeBtn" class="pill" title="切換主題">
+                    🌞/🌚
+                </button>
+                <button id="churchBtn" class="pill" title="後埔教會">
+                    ⛪ 後埔教會
+                </button>
+            </div>
+        </aside>
+
+        <div class="content">
+            <main>
+                <!-- 經文 -->
+                <div id="reader" class="verses"></div>
+
+                <!-- 後埔教會（點 ⛪ 顯示） -->
+                <div
+                    id="aboutChurch"
+                    class="verses hidden"
+                    style="max-width: unset"
+                >
+                    <h2>板橋後埔教會</h2>
+                    <p>台灣基督長老教會．新北市板橋區</p>
+                    <ul>
+                        <li>
+                            <strong>主日禮拜時間：</strong>台語 09:00、華語
+                            10:50（以教會最新公告為準）。
+                        </li>
+                        <li>
+                            <strong>地址：</strong>新北市板橋區重慶路 276 之 1
+                            號 3 樓。
+                        </li>
+                        <li><strong>網站：</strong>hpch.org.tw</li>
+                    </ul>
+                </div>
+            </main>
+        </div>
+
+        <script>
+            /* ---- constants ---- */
+            const DEFAULT_BOOK_NAME = "馬太福音";
+            const DEFAULT_CHAPTER_NO = 1;
+
+            /* ---- 66 books order ---- */
+            const BOOKS_META = [
+                {
+                    heading: "舊約",
+                    groups: [
+                        {
+                            sub: "摩西五書",
+                            books: [
+                                "創世記",
+                                "出埃及記",
+                                "利未記",
+                                "民數記",
+                                "申命記",
+                            ],
+                        },
+                        {
+                            sub: "歷史書",
+                            books: [
+                                "約書亞記",
+                                "士師記",
+                                "路得記",
+                                "撒母耳記上",
+                                "撒母耳記下",
+                                "列王紀上",
+                                "列王紀下",
+                                "歷代志上",
+                                "歷代志下",
+                                "以斯拉記",
+                                "尼希米記",
+                                "以斯帖記",
+                            ],
+                        },
+                        {
+                            sub: "詩歌智慧書",
+                            books: ["約伯記", "詩篇", "箴言", "傳道書", "雅歌"],
+                        },
+                        {
+                            sub: "大先知書",
+                            books: [
+                                "以賽亞書",
+                                "耶利米書",
+                                "耶利米哀歌",
+                                "以西結書",
+                                "但以理書",
+                            ],
+                        },
+                        {
+                            sub: "小先知書",
+                            books: [
+                                "何西阿書",
+                                "約珥書",
+                                "阿摩司書",
+                                "俄巴底亞書",
+                                "約拿書",
+                                "彌迦書",
+                                "那鴻書",
+                                "哈巴谷書",
+                                "西番雅書",
+                                "哈該書",
+                                "撒迦利亞書",
+                                "瑪拉基書",
+                            ],
+                        },
+                    ],
+                },
+                {
+                    heading: "新約",
+                    groups: [
+                        {
+                            sub: "福音書",
+                            books: [
+                                "馬太福音",
+                                "馬可福音",
+                                "路加福音",
+                                "約翰福音",
+                            ],
+                        },
+                        {
+                            sub: "使徒行傳-by 路加：保羅的希臘好友",
+                            books: ["使徒行傳"],
+                        },
+                        {
+                            sub: "保羅書信",
+                            books: [
+                                "羅馬書",
+                                "哥林多前書",
+                                "哥林多後書",
+                                "加拉太書",
+                                "以弗所書",
+                                "腓立比書",
+                                "歌羅西書",
+                                "帖撒羅尼迦前書",
+                                "帖撒羅尼迦後書",
+                                "提摩太前書",
+                                "提摩太後書",
+                                "提多書",
+                                "腓利門書",
+                                "希伯來書",
+                            ],
+                        },
+                        { sub: "by雅各：耶穌的弟弟", books: ["雅各書"] },
+                        {
+                            sub: "by 彼得: 使徒",
+                            books: ["彼得前書", "彼得後書"],
+                        },
+                        {
+                            sub: "by 約翰：使徒",
+                            books: ["約翰一書", "約翰二書", "約翰三書"],
+                        },
+                        { sub: " by猶大: 耶穌弟弟", books: ["猶大書"] },
+                        { sub: " by 約翰：可能是使徒", books: ["啟示錄"] },
+                    ],
+                },
+            ];
+
+            const state = {
+                data: null,
+                orderedBooks: [],
+                bookIdx: 0,
+                chapIdx: 0,
+                isMobile: false,
+                openBookEl: null,
+            };
+
+            /* ---- helpers ---- */
+            function detectMobile() {
+                const ua = navigator.userAgent || "";
+                const likelyMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
+                const small =
+                    Math.min(window.innerWidth, window.innerHeight) < 900;
+                return likelyMobile || small;
+            }
+            function presentBooksSet() {
+                return new Set(state.data.books.map((b) => b.name));
+            }
+            function bookByIdx(i) {
+                const name = state.orderedBooks[i];
+                return state.data.books.find((b) => b.name === name);
+            }
+            function idxOfBook(name) {
+                return state.orderedBooks.findIndex((n) => n === name);
+            }
+            function saveReading() {
+                const name =
+                    state.orderedBooks[state.bookIdx] || DEFAULT_BOOK_NAME;
+                const chap =
+                    bookByIdx(state.bookIdx)?.chapters?.[state.chapIdx]?.c ||
+                    DEFAULT_CHAPTER_NO;
+                localStorage.setItem("bookName", name);
+                localStorage.setItem("chapterNo", String(chap));
+            }
+            function loadReading() {
+                const name =
+                    localStorage.getItem("bookName") || DEFAULT_BOOK_NAME;
+                const chapNo = parseInt(
+                    localStorage.getItem("chapterNo") || DEFAULT_CHAPTER_NO,
+                    10,
+                );
+                return { name, chapNo };
+            }
+            function showBible() {
+                document.getElementById("reader").classList.remove("hidden");
+                document.getElementById("aboutChurch").classList.add("hidden");
+            }
+            function showChurch() {
+                document.getElementById("reader").classList.add("hidden");
+                document
+                    .getElementById("aboutChurch")
+                    .classList.remove("hidden");
+            }
+
+            /* ---- order ---- */
+            function buildOrder() {
+                const present = presentBooksSet();
+                state.orderedBooks = [];
+                BOOKS_META.forEach((sec) => {
+                    sec.groups.forEach((gr) => {
+                        gr.books.forEach((n) => {
+                            if (present.has(n)) state.orderedBooks.push(n);
+                        });
+                    });
+                });
+            }
+
+            /* ---- header & menu ---- */
+            function wireHeader() {
+                const open = () => document.body.classList.add("drawer-open");
+                const close = () =>
+                    document.body.classList.remove("drawer-open");
+                document
+                    .getElementById("menuBtnLeft")
+                    .addEventListener("click", open);
+                document
+                    .getElementById("menuBtnRight")
+                    .addEventListener("click", open);
+                document
+                    .getElementById("backdrop")
+                    .addEventListener("click", close);
+                window.addEventListener("keydown", (e) => {
+                    if (e.key === "Escape") close();
+                });
+
+                // prev/next buttons
+                document
+                    .getElementById("prevBtn")
+                    .addEventListener("click", () => {
+                        gotoPrev();
+                    });
+                document
+                    .getElementById("nextBtn")
+                    .addEventListener("click", () => {
+                        gotoNext();
+                    });
+
+                // keyboard arrows (desktop)
+                window.addEventListener("keydown", (e) => {
+                    if (e.key === "ArrowLeft") {
+                        e.preventDefault();
+                        gotoPrev();
+                    }
+                    if (e.key === "ArrowRight") {
+                        e.preventDefault();
+                        gotoNext();
+                    }
+                });
+
+                // swipe (mobile)
+                const reader = document.getElementById("reader");
+                let x0 = null,
+                    y0 = null,
+                    t0 = 0;
+                const THRESH = 50; // px
+                reader.addEventListener(
+                    "touchstart",
+                    (ev) => {
+                        if (!state.isMobile) return;
+                        const t = ev.changedTouches[0];
+                        x0 = t.clientX;
+                        y0 = t.clientY;
+                        t0 = Date.now();
+                    },
+                    { passive: true },
+                );
+                reader.addEventListener(
+                    "touchend",
+                    (ev) => {
+                        if (!state.isMobile || x0 === null) return;
+                        const t = ev.changedTouches[0];
+                        const dx = t.clientX - x0,
+                            dy = t.clientY - y0;
+                        if (
+                            Math.abs(dx) > Math.abs(dy) &&
+                            Math.abs(dx) > THRESH
+                        ) {
+                            if (dx < 0) gotoNext();
+                            else gotoPrev();
+                        }
+                        x0 = y0 = null;
+                    },
+                    { passive: true },
+                );
+
+                // layout change on resize
+                window.addEventListener("resize", () => {
+                    const now = detectMobile();
+                    if (now !== state.isMobile) {
+                        state.isMobile = now;
+                        document.body.classList.toggle(
+                            "mobile",
+                            state.isMobile,
+                        );
+                        document.getElementById(
+                            "bookTitleCenter",
+                        ).style.display = state.isMobile ? "inline" : "none";
+                        updateTitles();
+                    }
+                });
+            }
+
+            /* ---- titles + chapters ---- */
+            function updateTitles() {
+                const name = state.orderedBooks[state.bookIdx] || "—";
+                document.getElementById("bookTitle").textContent = name;
+                document.getElementById("bookTitleCenter").textContent = name;
+            }
+            function renderChapters() {
+                const area = document.getElementById("chapterArea");
+                area.innerHTML = "";
+                const book = bookByIdx(state.bookIdx);
+                updateTitles();
+                if (!book) {
+                    return;
+                }
+                book.chapters.forEach((ch, i) => {
+                    const btn = document.createElement("button");
+                    btn.textContent = ch.c;
+                    btn.className = i === state.chapIdx ? "active" : "";
+                    btn.onclick = () => {
+                        state.chapIdx = i;
+                        saveReading();
+                        renderChapters();
+                        renderChapter(true);
+                        showBible();
+                    };
+                    area.appendChild(btn);
+                });
+            }
+            function renderChapter(scrollToFirst = false) {
+                const reader = document.getElementById("reader");
+                const book = bookByIdx(state.bookIdx);
+                const ch = book?.chapters?.[state.chapIdx];
+                if (!ch) {
+                    reader.innerHTML = '<div class="muted">本書沒有章節</div>';
+                    return;
+                }
+                let html = `<div class="muted" id="top">${book.name} 第 ${ch.c} 章</div>`;
+                ch.verses.forEach((v) => {
+                    const id = v.v === 1 ? ` id="v-${ch.c}-1"` : "";
+                    html += `<div class="verse"${id}><span class="vno">${ch.c}:${v.v}</span>${escapeHtml(v.t)}</div>`;
+                });
+                reader.innerHTML = html;
+
+                // scroll so the chapter header is just below the sticky header
+                requestAnimationFrame(() => {
+                    const headerH =
+                        document.querySelector("header")?.offsetHeight || 0;
+                    const topEl =
+                        document.getElementById("top") || // your "書卷 第X章" line
+                        document.getElementById(`v-${ch.c}-1`) || // fallback: first verse
+                        reader; // fallback: container
+                    const y =
+                        topEl.getBoundingClientRect().top +
+                        window.scrollY -
+                        headerH -
+                        8; // 8px cushion
+                    window.scrollTo({ top: Math.max(0, y), behavior: "auto" });
+                });
+            }
+
+            /* ---- prev/next navigation with cross-book boundaries ---- */
+            function gotoPrev() {
+                const book = bookByIdx(state.bookIdx);
+                if (!book) return;
+                if (state.chapIdx > 0) {
+                    state.chapIdx--;
+                } else {
+                    if (state.bookIdx > 0) {
+                        state.bookIdx--;
+                        const prevBook = bookByIdx(state.bookIdx);
+                        state.chapIdx = Math.max(
+                            0,
+                            (prevBook?.chapters?.length || 1) - 1,
+                        );
+                    } else {
+                        // at very first chapter of first book → stay
+                        return;
+                    }
+                }
+                saveReading();
+                renderChapters();
+                renderChapter(true);
+                showBible();
+            }
+            function gotoNext() {
+                const book = bookByIdx(state.bookIdx);
+                if (!book) return;
+                if (state.chapIdx < book.chapters.length - 1) {
+                    state.chapIdx++;
+                } else {
+                    if (state.bookIdx < state.orderedBooks.length - 1) {
+                        state.bookIdx++;
+                        state.chapIdx = 0;
+                    } else {
+                        // at last chapter of last book → stay
+                        return;
+                    }
+                }
+                saveReading();
+                renderChapters();
+                renderChapter(true);
+                showBible();
+            }
+
+            /* ---- drawer (accordion + 前往) ---- */
+            function buildDrawer() {
+                const root = document.getElementById("drawerContent");
+                root.innerHTML = "";
+
+                // footer controls
+                const setPx = (px) => {
+                    document.documentElement.style.setProperty(
+                        "--fs",
+                        px + "px",
+                    );
+                    localStorage.setItem("fsPx", String(px));
+                };
+                const clamp = (v) => Math.max(14, Math.min(36, v));
+                document.getElementById("fsDec").onclick = () => {
+                    const cur =
+                        parseInt(
+                            getComputedStyle(
+                                document.documentElement,
+                            ).getPropertyValue("--fs"),
+                        ) || 28;
+                    setPx(clamp(cur - 2));
+                };
+                document.getElementById("fsInc").onclick = () => {
+                    const cur =
+                        parseInt(
+                            getComputedStyle(
+                                document.documentElement,
+                            ).getPropertyValue("--fs"),
+                        ) || 28;
+                    setPx(clamp(cur + 2));
+                };
+                document.getElementById("themeBtn").onclick = () => {
+                    const cur =
+                        document.documentElement.getAttribute("data-theme") ||
+                        "dark";
+                    const next = cur === "dark" ? "light" : "dark";
+                    document.documentElement.setAttribute("data-theme", next);
+                    localStorage.setItem("theme", next);
+                };
+                document.getElementById("churchBtn").onclick = () => {
+                    showChurch();
+                    document.body.classList.remove("drawer-open");
+                };
+
+                const present = presentBooksSet();
+                BOOKS_META.forEach((section) => {
+                    const h = document.createElement("div");
+                    h.className = "group-title";
+                    h.textContent = section.heading;
+                    root.appendChild(h);
+
+                    section.groups.forEach((gr) => {
+                        const sub = document.createElement("div");
+                        sub.className = "sub-title";
+                        sub.textContent = gr.sub;
+                        root.appendChild(sub);
+
+                        gr.books.forEach((name) => {
+                            if (!present.has(name)) return;
+                            const book = state.data.books.find(
+                                (b) => b.name === name,
+                            );
+
+                            const bookRow = document.createElement("div");
+                            bookRow.className = "book-item";
+                            const left = document.createElement("div");
+                            left.className = "book-left";
+                            const arrow = document.createElement("span");
+                            arrow.className = "arrow";
+                            arrow.textContent = "▶";
+                            const label = document.createElement("span");
+                            label.className = "book-name";
+                            label.textContent = name;
+                            left.append(arrow, label);
+
+                            // 前往 button (go to chapter 1)
+                            const goBtn = document.createElement("button");
+                            goBtn.className = "pill";
+                            goBtn.textContent = "前往";
+                            goBtn.title = "前往第 1 章";
+
+                            bookRow.append(left, goBtn);
+                            root.appendChild(bookRow);
+
+                            const chapList = document.createElement("div");
+                            chapList.className = "chap-list";
+                            (book?.chapters || []).forEach((ch, i) => {
+                                const cbtn = document.createElement("button");
+                                cbtn.className = "pill";
+                                cbtn.textContent = ch.c;
+                                cbtn.onclick = (ev) => {
+                                    ev.stopPropagation();
+                                    state.bookIdx = idxOfBook(name);
+                                    state.chapIdx = i;
+                                    saveReading();
+                                    renderChapters();
+                                    renderChapter(true);
+                                    showBible();
+                                    document.body.classList.remove(
+                                        "drawer-open",
+                                    );
+                                };
+                                chapList.appendChild(cbtn);
+                            });
+                            root.appendChild(chapList);
+
+                            // accordion open/close + jump to chapter 1
+                            left.addEventListener("click", () => {
+                                if (
+                                    state.openBookEl &&
+                                    state.openBookEl !== bookRow
+                                ) {
+                                    state.openBookEl.classList.remove("open");
+                                }
+                                const willOpen =
+                                    !bookRow.classList.contains("open");
+                                if (willOpen) {
+                                    bookRow.classList.add("open");
+                                    state.openBookEl = bookRow;
+                                } else {
+                                    bookRow.classList.remove("open");
+                                    state.openBookEl = null;
+                                }
+
+                                state.bookIdx = idxOfBook(name);
+                                state.chapIdx = 0;
+                                saveReading();
+                                renderChapters();
+                                renderChapter(true);
+                                showBible();
+                            });
+
+                            // 前往 → always jump to chapter 1 and close drawer
+                            goBtn.addEventListener("click", (ev) => {
+                                ev.stopPropagation();
+                                state.bookIdx = idxOfBook(name);
+                                state.chapIdx = 0;
+                                saveReading();
+                                renderChapters();
+                                renderChapter(true);
+                                showBible();
+                                document.body.classList.remove("drawer-open");
+                            });
+                        });
+                    });
+                });
+            }
+
+            /* ---- utilities ---- */
+            function escapeHtml(s) {
+                return s
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;");
+            }
+
+            /* ---- boot ---- */
+            async function loadData() {
+                // theme & font
+                const theme = localStorage.getItem("theme") || "dark";
+                document.documentElement.setAttribute("data-theme", theme);
+                const fs = +(localStorage.getItem("fsPx") || 28);
+                document.documentElement.style.setProperty("--fs", fs + "px");
+
+                state.isMobile = detectMobile();
+                document.body.classList.toggle("mobile", state.isMobile);
+                document.getElementById("bookTitleCenter").style.display =
+                    state.isMobile ? "inline" : "none";
+
+                const res = await fetch("bible.json", { cache: "no-cache" });
+                state.data = await res.json();
+
+                buildOrder();
+
+                // restore last reading position (or default to 馬太福音 1)
+                const saved = loadReading();
+                const bIdx = idxOfBook(saved.name);
+                state.bookIdx =
+                    bIdx >= 0
+                        ? bIdx
+                        : idxOfBook(DEFAULT_BOOK_NAME) >= 0
+                          ? idxOfBook(DEFAULT_BOOK_NAME)
+                          : 0;
+                const book = bookByIdx(state.bookIdx);
+                let cIdx = 0;
+                if (book && Array.isArray(book.chapters)) {
+                    const found = book.chapters.findIndex(
+                        (c) => Number(c.c) === Number(saved.chapNo),
+                    );
+                    cIdx = found >= 0 ? found : 0;
+                }
+                state.chapIdx = cIdx;
+
+                buildDrawer();
+                wireHeader();
+                renderChapters();
+                renderChapter(true); // 初次載入捲到第1節
+                showBible();
+            }
+
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () =>
+                    navigator.serviceWorker.register("sw.js"),
+                );
+            }
+
+            loadData();
+        </script>
+    </body>
+</html>
