@@ -18,7 +18,7 @@
                 --chip: #10161c;
                 --chip-line: #2b3947;
                 --mark-bg: #2b3f64;
-                /* FONT size (default ≈ 2x previous) */
+                /* FONT size default */
                 --fs: 1.8rem;
             }
             :root[data-theme="light"] {
@@ -204,13 +204,36 @@
                 padding: 0.05rem 0.15rem;
                 border-radius: 0.2rem;
             }
-            @media (max-width: 980px) {
-                .content {
-                    grid-template-columns: 1fr;
-                }
-                .sidebar {
-                    max-height: unset;
-                }
+
+            /* Mobile/desktop visibility helpers */
+            .only-desktop {
+                display: flex;
+            }
+            .only-mobile {
+                display: none;
+            }
+            body.mobile .only-desktop {
+                display: none;
+            }
+            body.mobile .only-mobile {
+                display: inline-flex;
+            }
+
+            /* Mobile layout tweaks */
+            body.mobile .content {
+                grid-template-columns: 1fr;
+            }
+            body.mobile .sidebar {
+                display: none;
+            }
+            body.mobile header {
+                gap: 0.5rem;
+            }
+            body.mobile #q {
+                min-width: 12ch;
+            }
+            body.mobile .verses {
+                max-width: unset;
             }
         </style>
     </head>
@@ -218,47 +241,53 @@
         <header>
             <h1>聖經和合本 <span class="badge">PWA</span></h1>
 
-            <div class="toolbar">
-                <!-- Theme toggle -->
-                <button id="themeBtn" class="toggle" title="切換主題">
-                    🌞 / 🌚
-                </button>
+            <!-- Theme toggle -->
+            <button id="themeBtn" class="toggle" title="切換主題">
+                🌞 / 🌚
+            </button>
 
-                <!-- Font size slider -->
-                <label class="muted" for="fs">字體：</label>
-                <input
-                    id="fs"
-                    type="range"
-                    min="14"
-                    max="36"
-                    step="1"
-                    value="28"
-                />
-                <span id="fsVal" class="muted">28px</span>
+            <!-- Desktop: slider -->
+            <label class="muted only-desktop" for="fs">字體：</label>
+            <input
+                id="fs"
+                class="only-desktop"
+                type="range"
+                min="14"
+                max="36"
+                step="1"
+                value="28"
+            />
+            <span id="fsVal" class="muted only-desktop">28px</span>
 
-                <!-- Book dropdown (mirrors the left list order & grouping) -->
-                <label class="muted">書卷：</label>
-                <select id="bookSel"></select>
+            <!-- Book dropdown (shared) -->
+            <label class="muted">書卷：</label>
+            <select id="bookSel"></select>
 
-                <!-- Chapter buttons -->
-                <span id="chapterArea" class="chapters"></span>
-
-                <!-- Search -->
-                <input
-                    id="q"
-                    type="search"
-                    placeholder="全文搜尋（離線）"
-                    style="min-width: 16ch"
-                />
+            <!-- Mobile: font size A-/A+ -->
+            <div
+                class="only-mobile"
+                id="fsBtns"
+                style="gap: 0.25rem; align-items: center"
+            >
+                <button id="fsDec" class="toggle" title="減小字體">A−</button>
+                <button id="fsInc" class="toggle" title="放大字體">A+</button>
             </div>
 
+            <!-- Chapter buttons -->
+            <span id="chapterArea" class="chapters"></span>
+
+            <!-- Search -->
+            <input
+                id="q"
+                type="search"
+                placeholder="全文搜尋（離線）"
+                style="min-width: 16ch"
+            />
             <div class="search-info" id="searchInfo"></div>
         </header>
 
         <div class="content">
-            <aside class="sidebar" id="sidebar">
-                <!-- Filled by JS: groups, subheadings, 66 books -->
-            </aside>
+            <aside class="sidebar" id="sidebar"></aside>
             <main>
                 <div id="reader" class="verses"></div>
             </main>
@@ -375,35 +404,42 @@
                             books: ["約翰一書", "約翰二書", "約翰三書"],
                         },
                         { sub: " by猶大: 耶穌弟弟", books: ["猶大書"] },
-                        {
-                            sub: " by 約翰：可能是使徒”, 書卷",
-                            books: ["啟示錄"],
-                        },
+                        { sub: " by 約翰：可能是使徒", books: ["啟示錄"] },
                     ],
                 },
             ];
 
-            // If some book names in DB differ slightly, we will only show those present.
             const state = {
                 data: null,
-                // flattened order of books from BOOKS_META, filtered by presence in data
                 orderedBooks: [],
                 bookIdx: 0,
                 chapIdx: 0,
                 q: "",
+                isMobile: false,
             };
 
+            function detectMobile() {
+                const ua = navigator.userAgent || "";
+                const likelyMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
+                const smallScreen =
+                    Math.min(window.innerWidth, window.innerHeight) < 900;
+                return likelyMobile || smallScreen;
+            }
+
             async function loadData() {
-                // restore theme + font size
+                // Theme + font
                 const theme = localStorage.getItem("theme") || "dark";
                 document.documentElement.setAttribute("data-theme", theme);
                 const fs = +(localStorage.getItem("fsPx") || 28);
                 document.documentElement.style.setProperty("--fs", fs + "px");
 
+                state.isMobile = detectMobile();
+                document.body.classList.toggle("mobile", state.isMobile);
+
                 const res = await fetch("bible.json", { cache: "no-cache" });
                 state.data = await res.json();
 
-                buildSidebarAndOrder();
+                buildSidebarAndOrder(); // no-op on mobile (hidden), but we still compute order
                 buildDropdown();
                 wireControls();
                 renderChapters();
@@ -411,18 +447,23 @@
             }
 
             function wireControls() {
-                // Theme toggle
-                const themeBtn = document.getElementById("themeBtn");
-                themeBtn.addEventListener("click", () => {
-                    const cur =
-                        document.documentElement.getAttribute("data-theme") ||
-                        "dark";
-                    const next = cur === "dark" ? "light" : "dark";
-                    document.documentElement.setAttribute("data-theme", next);
-                    localStorage.setItem("theme", next);
-                });
+                // Theme
+                document
+                    .getElementById("themeBtn")
+                    .addEventListener("click", () => {
+                        const cur =
+                            document.documentElement.getAttribute(
+                                "data-theme",
+                            ) || "dark";
+                        const next = cur === "dark" ? "light" : "dark";
+                        document.documentElement.setAttribute(
+                            "data-theme",
+                            next,
+                        );
+                        localStorage.setItem("theme", next);
+                    });
 
-                // Font size
+                // Desktop font slider
                 const fsInput = document.getElementById("fs");
                 const fsVal = document.getElementById("fsVal");
                 const currentFs =
@@ -443,6 +484,41 @@
                     localStorage.setItem("fsPx", String(px));
                 });
 
+                // Mobile A-/A+
+                const fsDec = document.getElementById("fsDec");
+                const fsInc = document.getElementById("fsInc");
+                if (fsDec && fsInc) {
+                    const step = 2;
+                    const clamp = (v) => Math.max(14, Math.min(36, v));
+                    const setPx = (px) => {
+                        document.documentElement.style.setProperty(
+                            "--fs",
+                            px + "px",
+                        );
+                        localStorage.setItem("fsPx", String(px));
+                        // keep slider in sync (hidden on mobile but ok)
+                        document.getElementById("fs").value = px;
+                        document.getElementById("fsVal").textContent =
+                            px + "px";
+                    };
+                    fsDec.addEventListener("click", () => {
+                        const cur = parseInt(
+                            getComputedStyle(
+                                document.documentElement,
+                            ).getPropertyValue("--fs"),
+                        );
+                        setPx(clamp(cur - step));
+                    });
+                    fsInc.addEventListener("click", () => {
+                        const cur = parseInt(
+                            getComputedStyle(
+                                document.documentElement,
+                            ).getPropertyValue("--fs"),
+                        );
+                        setPx(clamp(cur + step));
+                    });
+                }
+
                 // Search
                 document.getElementById("q").addEventListener("input", (e) => {
                     state.q = e.target.value.trim();
@@ -460,72 +536,86 @@
                         renderChapter();
                         scrollSidebarToActive();
                     });
+
+                // Resize: re-detect mobile if rotated
+                window.addEventListener("resize", () => {
+                    const mobile = detectMobile();
+                    if (mobile !== state.isMobile) {
+                        state.isMobile = mobile;
+                        document.body.classList.toggle(
+                            "mobile",
+                            state.isMobile,
+                        );
+                    }
+                });
             }
 
             function presentBooksSet() {
-                // names present in data
                 return new Set(state.data.books.map((b) => b.name));
             }
 
             function buildSidebarAndOrder() {
                 const present = presentBooksSet();
+                state.orderedBooks = [];
+                let idx = 0;
+
                 const sidebar = document.getElementById("sidebar");
                 sidebar.innerHTML = "";
 
-                // Build flattened order and sidebar UI
-                state.orderedBooks = [];
-                let indexCounter = 0;
-
                 BOOKS_META.forEach((section) => {
                     // Heading (舊約/新約)
-                    const h = document.createElement("div");
-                    h.className = "group-title";
-                    h.textContent = section.heading;
-                    sidebar.appendChild(h);
-
+                    if (!state.isMobile) {
+                        const h = document.createElement("div");
+                        h.className = "group-title";
+                        h.textContent = section.heading;
+                        sidebar.appendChild(h);
+                    }
                     section.groups.forEach((gr) => {
-                        const sub = document.createElement("div");
-                        sub.className = "sub-title";
-                        sub.textContent = gr.sub;
-                        sidebar.appendChild(sub);
-
+                        if (!state.isMobile) {
+                            const sub = document.createElement("div");
+                            sub.className = "sub-title";
+                            sub.textContent = gr.sub;
+                            sidebar.appendChild(sub);
+                        }
                         const list = document.createElement("div");
                         list.className = "book-list";
 
                         gr.books.forEach((name) => {
-                            if (!present.has(name)) return; // skip if missing from data
-                            const idx = indexCounter++;
+                            if (!present.has(name)) return;
                             state.orderedBooks.push(name);
-                            const row = document.createElement("div");
-                            row.className = "book";
-                            const btn = document.createElement("button");
-                            btn.textContent = name;
-                            btn.onclick = () => {
-                                state.bookIdx = idx;
-                                state.chapIdx = 0;
-                                updateDropdownSelection();
-                                renderChapters();
-                                renderChapter();
-                                highlightActiveBookInSidebar();
-                            };
-                            row.appendChild(btn);
-                            list.appendChild(row);
+                            if (!state.isMobile) {
+                                const row = document.createElement("div");
+                                row.className = "book";
+                                const btn = document.createElement("button");
+                                btn.textContent = name;
+                                btn.onclick = () => {
+                                    state.bookIdx = idxOfBook(name);
+                                    state.chapIdx = 0;
+                                    updateDropdownSelection();
+                                    renderChapters();
+                                    renderChapter();
+                                    highlightActiveBookInSidebar();
+                                };
+                                row.appendChild(btn);
+                                list.appendChild(row);
+                            }
                         });
-
-                        sidebar.appendChild(list);
+                        if (!state.isMobile) sidebar.appendChild(list);
                     });
                 });
-
                 highlightActiveBookInSidebar();
             }
 
+            function idxOfBook(name) {
+                return state.orderedBooks.findIndex((n) => n === name);
+            }
+
             function highlightActiveBookInSidebar() {
+                if (state.isMobile) return;
                 const sidebar = document.getElementById("sidebar");
-                // Clear all highlights
                 sidebar
                     .querySelectorAll(".book button")
                     .forEach((b) => b.classList.remove("active"));
-                // Highlight current
                 const activeName = state.orderedBooks[state.bookIdx];
                 const btns = [
                     ...sidebar.querySelectorAll(".book button"),
@@ -534,6 +624,7 @@
             }
 
             function scrollSidebarToActive() {
+                if (state.isMobile) return;
                 const sidebar = document.getElementById("sidebar");
                 const activeName = state.orderedBooks[state.bookIdx];
                 const btn = [...sidebar.querySelectorAll(".book button")].find(
@@ -545,7 +636,6 @@
             function buildDropdown() {
                 const sel = document.getElementById("bookSel");
                 sel.innerHTML = "";
-
                 state.orderedBooks.forEach((name, i) => {
                     const opt = document.createElement("option");
                     opt.value = i;
@@ -654,7 +744,7 @@
                     .replace(/>/g, "&gt;");
             }
 
-            // PWA: keep your existing service worker registration
+            // PWA SW
             if ("serviceWorker" in navigator) {
                 window.addEventListener("load", () => {
                     navigator.serviceWorker.register("sw.js");
