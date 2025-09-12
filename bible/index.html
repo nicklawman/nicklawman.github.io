@@ -1100,6 +1100,7 @@
             }
 
             /* ====== 新增：左右滑手勢，左滑→下一章，右滑→上一章 ====== */
+            /* ====== 新增：左右滑手勢（在可水平捲動區塊內開始時不觸發）====== */
             function enableSwipe(container, onLeft, onRight, opts = {}) {
                 const THRESHOLD = opts.threshold ?? 60; // 觸發所需水平距離(px)
                 const MAX_ANGLE = opts.maxAngle ?? 35; // 與水平最大夾角(度)
@@ -1107,8 +1108,24 @@
 
                 let startX = 0,
                     startY = 0,
-                    t0 = 0,
-                    tracking = false;
+                    t0 = 0;
+                let tracking = false;
+                let startedInScrollable = false;
+
+                function isHorizScrollable(el, stopAt) {
+                    while (el && el !== stopAt) {
+                        const cs = getComputedStyle(el);
+                        if (
+                            (cs.overflowX === "auto" ||
+                                cs.overflowX === "scroll") &&
+                            el.scrollWidth > el.clientWidth
+                        ) {
+                            return true;
+                        }
+                        el = el.parentElement;
+                    }
+                    return false;
+                }
 
                 container.addEventListener(
                     "touchstart",
@@ -1119,6 +1136,26 @@
                         startY = t.clientY;
                         t0 = Date.now();
                         tracking = true;
+                        // 若在可水平捲動的容器（例如 .md-grid）內開始，就標記不觸發換章
+                        startedInScrollable = isHorizScrollable(
+                            ev.target,
+                            container,
+                        );
+                    },
+                    { passive: true },
+                );
+
+                container.addEventListener(
+                    "touchmove",
+                    (ev) => {
+                        if (!tracking) return;
+                        // 使用者垂直移動明顯 → 視為捲動內容，取消手勢
+                        const t = ev.changedTouches[0];
+                        const dx = Math.abs(t.clientX - startX);
+                        const dy = Math.abs(t.clientY - startY);
+                        if (dy > dx && dy > 8) {
+                            tracking = false;
+                        }
                     },
                     { passive: true },
                 );
@@ -1126,8 +1163,17 @@
                 container.addEventListener(
                     "touchend",
                     (ev) => {
-                        if (!tracking || !state.isMobile) return;
+                        if (!tracking || !state.isMobile) {
+                            tracking = false;
+                            return;
+                        }
                         tracking = false;
+
+                        // 在可水平捲動區塊中開始 → 不觸發左右換章
+                        if (startedInScrollable) {
+                            startedInScrollable = false;
+                            return;
+                        }
 
                         const t = ev.changedTouches[0];
                         const dx = t.clientX - startX;
@@ -1139,7 +1185,6 @@
                         const angle =
                             (Math.atan2(absDy, absDx) * 180) / Math.PI;
 
-                        // 符合時間與水平位移，且不是過度垂直的滑動
                         if (
                             dt <= MAX_DURATION &&
                             absDx >= THRESHOLD &&
