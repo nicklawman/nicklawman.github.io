@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width,initial-scale=1,viewport-fit=cover"
+        />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="Prague Pilgrim" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="theme-color" content="#0A84FF" />
+        <title>Nick的朝聖之路-布拉格50教堂</title>
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+            crossorigin=""
+        />
+        <style>
+            :root {
+                --brand: #0a84ff;
+            }
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                font:
+                    14px/1.4 -apple-system,
+                    BlinkMacSystemFont,
+                    Segoe UI,
+                    Arial;
+            }
+            #map {
+                height: 100%;
+            }
+            .meta-bar {
+                position: fixed;
+                left: 10px;
+                top: 10px;
+                z-index: 1000;
+                background: rgba(255, 255, 255, 0.92);
+                border-radius: 10px;
+                padding: 8px 10px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+            }
+            .legend {
+                font-size: 12px;
+                color: #555;
+            }
+            .num-marker {
+                background: #e63946;
+                color: #fff;
+                font-weight: 700;
+                border: 2px solid #fff;
+                border-radius: 16px;
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+            }
+            .leaflet-popup-content h3 {
+                margin: 0 0 6px;
+                font-size: 15px;
+            }
+            .leaflet-popup-content p {
+                margin: 0 0 8px;
+                font-size: 13px;
+            }
+            .popup-actions a,
+            .popup-actions button {
+                display: inline-block;
+                padding: 6px 10px;
+                margin-right: 6px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                background: #fff;
+                cursor: pointer;
+                font-size: 12px;
+            }
+            .popup-actions a.primary,
+            .popup-actions button.primary {
+                background: var(--brand);
+                color: #fff;
+                border-color: var(--brand);
+            }
+            .note-box {
+                width: 100%;
+                min-height: 64px;
+                padding: 6px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: 13px;
+            }
+            .corner-btn {
+                position: fixed;
+                left: 10px;
+                bottom: 10px;
+                z-index: 1000;
+                background: #111;
+                color: #fff;
+                border: none;
+                border-radius: 10px;
+                padding: 10px 12px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+                cursor: pointer;
+            }
+            .locate-btn {
+                position: fixed;
+                right: 10px;
+                top: 10px;
+                z-index: 1000;
+                background: var(--brand);
+                color: #fff;
+                border: none;
+                border-radius: 10px;
+                padding: 10px 12px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+                cursor: pointer;
+            }
+            .list-btn {
+                position: fixed;
+                right: 10px;
+                bottom: 10px;
+                z-index: 1000;
+                background: #fff;
+                color: #111;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                padding: 8px 10px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                cursor: pointer;
+            }
+            .drawer {
+                position: fixed;
+                right: 10px;
+                bottom: 60px;
+                z-index: 1000;
+                max-height: 45vh;
+                width: 280px;
+                overflow: auto;
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 10px;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+                padding: 8px;
+                display: none;
+            }
+            .drawer h4 {
+                margin: 6px 6px 8px;
+                font-size: 14px;
+            }
+            .drawer ol {
+                margin: 6px 16px;
+            }
+            .drawer li {
+                font-size: 13px;
+                margin-bottom: 6px;
+            }
+            .fullscreen-number {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.95);
+                z-index: 10000;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+            }
+            .fullscreen-number.show {
+                display: flex;
+            }
+            .fullscreen-number .big-number {
+                color: #fff;
+                font-size: 180px;
+                font-weight: 700;
+                line-height: 1;
+            }
+            .fullscreen-number .close-btn {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: rgba(255, 255, 255, 0.2);
+                color: #fff;
+                border: none;
+                border-radius: 50%;
+                width: 44px;
+                height: 44px;
+                font-size: 24px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+
+        <!-- 顯示總距離與點數 -->
+        <div class="meta-bar">
+            <div><strong>尼克朝聖之路</strong></div>
+            <div id="dist">計算中…</div>
+            <div id="countInfo" class="legend"></div>
+            <div class="legend">布拉格50教堂</div>
+        </div>
+
+        <!-- 下載 CSV -->
+        <button class="corner-btn" id="downloadCsvBtn">⬇️ 下載筆記 CSV</button>
+        <!-- 定位 -->
+        <button class="locate-btn" id="locateBtn">📍 我的定位</button>
+        <!-- 清單抽屜 -->
+        <button class="list-btn" id="listBtn">🗂 清單</button>
+        <div class="drawer" id="drawer">
+            <h4>路線順序</h4>
+            <ol id="list"></ol>
+        </div>
+
+        <!-- 全屏數字顯示 -->
+        <div class="fullscreen-number" id="fullscreenNumber">
+            <button
+                class="close-btn"
+                onclick="document.getElementById('fullscreenNumber').classList.remove('show')"
+            >
+                ×
+            </button>
+            <div class="big-number" id="bigNumber">01</div>
+        </div>
+
+        <script
+            src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""
+        ></script>
+        <script>
+            /* ====== PWA：manifest & service worker（離線可用） ====== */
+            (function () {
+                const manifest = {
+                    name: "Prague Pilgrim Route",
+                    short_name: "Pilgrim",
+                    start_url: ".",
+                    display: "standalone",
+                    background_color: "#ffffff",
+                    theme_color: "#0A84FF",
+                    icons: [],
+                };
+                const blob = new Blob([JSON.stringify(manifest)], {
+                    type: "application/manifest+json",
+                });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("link");
+                link.rel = "manifest";
+                link.href = url;
+                document.head.appendChild(link);
+
+                const swCode = `
+    const STATIC_CACHE = 'pp-v3';
+    const STATIC_ASSETS = [
+      './', './index.html',
+      'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+      'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+    ];
+    self.addEventListener('install', e=>{
+      e.waitUntil(caches.open(STATIC_CACHE).then(c=>c.addAll(STATIC_ASSETS)).then(()=>self.skipWaiting()));
+    });
+    self.addEventListener('activate', e=>{
+      e.waitUntil(
+        caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==STATIC_CACHE).map(k=>caches.delete(k))))
+      );
+    });
+    // tiles: runtime cache（可離線重看已經走過的圖塊）
+    self.addEventListener('fetch', e=>{
+      const req = e.request; const url = new URL(req.url);
+      if (url.hostname.endsWith('cartocdn.com') || url.hostname.endsWith('openstreetmap.org')) {
+        e.respondWith(caches.open('tiles-v3').then(async cache=>{
+          const cached = await cache.match(req);
+          if (cached) return cached;
+          try { const fresh = await fetch(req, {mode:'cors'}); cache.put(req, fresh.clone()); return fresh; }
+          catch (err) { return cached || Response.error(); }
+        }));
+        return;
+      }
+      e.respondWith(caches.match(req).then(cached=>cached || fetch(req)));
+    });
+  `;
+                const swBlob = new Blob([swCode], { type: "text/javascript" });
+                const swUrl = URL.createObjectURL(swBlob);
+                if ("serviceWorker" in navigator)
+                    navigator.serviceWorker.register(swUrl);
+            })();
+
+            /* ====== 50 座清單（移除木教堂；加入 Agnes 修道院） ======
+   ✅ 並新增「聖方濟各教堂（紅星十字騎士團）」作為第 49 點來源，確保總數 50。 */
+            const PLACES = [
+                // Castle area
+                {
+                    en: "St. Vitus Cathedral",
+                    zh: "聖維特主教座堂",
+                    desc: "捷克最重要的哥德式教堂，歷代國王加冕與安葬之地。",
+                    lat: 50.0909,
+                    lon: 14.4006,
+                },
+                {
+                    en: "St. George's Basilica",
+                    zh: "聖喬治聖殿",
+                    desc: "完整羅馬式代表，內有聖女露德米拉墓。",
+                    lat: 50.0905,
+                    lon: 14.402,
+                },
+                {
+                    en: "All Saints Church (Kapitulní kostel Všech svatých)",
+                    zh: "諸聖堂",
+                    desc: "城堡旁皇室禮拜空間。",
+                    lat: 50.0902,
+                    lon: 14.404,
+                },
+                {
+                    en: "Church of St. Benedict",
+                    zh: "聖本篤教堂",
+                    desc: "17世紀巴洛克小堂。",
+                    lat: 50.0912,
+                    lon: 14.4058,
+                },
+                {
+                    en: "Loreta",
+                    zh: "洛雷塔",
+                    desc: "巴洛克朝聖地，聖屋與報時銀鐘。",
+                    lat: 50.0885,
+                    lon: 14.3893,
+                },
+                {
+                    en: "Strahov Monastery – Basilica of the Assumption",
+                    zh: "斯特拉霍夫修道院聖母升天大殿",
+                    desc: "12世紀修道院，圖書館與藝術藏品豐富。",
+                    lat: 50.0863,
+                    lon: 14.3913,
+                },
+                {
+                    en: "St. Nicholas (Malá Strana)",
+                    zh: "小城區聖尼古拉",
+                    desc: "巴洛克圓頂與壯麗管風琴。",
+                    lat: 50.088,
+                    lon: 14.4043,
+                },
+                {
+                    en: "Our Lady Victorious & Infant Jesus of Prague",
+                    zh: "勝利聖母與布拉格聖嬰",
+                    desc: "國際朝聖地。",
+                    lat: 50.0851,
+                    lon: 14.4047,
+                },
+                {
+                    en: "St. Thomas Church (Augustinian)",
+                    zh: "聖多瑪教堂（奧古斯丁會）",
+                    desc: "修會教堂，藝術裝飾華麗。",
+                    lat: 50.087,
+                    lon: 14.4048,
+                },
+                {
+                    en: "Our Lady beneath the Chain",
+                    zh: "鏈下聖母教堂",
+                    desc: "馬耳他騎士團古教堂。",
+                    lat: 50.0868,
+                    lon: 14.4059,
+                },
+                {
+                    en: "St. Mary Magdalene (Orthodox)",
+                    zh: "聖瑪利亞瑪達肋納（東正教）",
+                    desc: "東正教木洋蔥塔風格。",
+                    lat: 50.0876,
+                    lon: 14.4095,
+                },
+
+                // Old Town core
+                {
+                    en: "Old Town St. Nicholas (Hussite)",
+                    zh: "舊城聖尼古拉（胡斯派）",
+                    desc: "舊城廣場北側地標。",
+                    lat: 50.0877,
+                    lon: 14.4206,
+                },
+                {
+                    en: "Church of Our Lady before Týn",
+                    zh: "泰恩聖母教堂",
+                    desc: "雙塔哥德地標。",
+                    lat: 50.0872,
+                    lon: 14.4213,
+                },
+                {
+                    en: "Basilica of St. James the Greater",
+                    zh: "大聖雅各伯聖殿",
+                    desc: "巴洛克內飾與『斷手傳說』。",
+                    lat: 50.0879,
+                    lon: 14.4275,
+                },
+                {
+                    en: "Church of St. Havel / St. Gall",
+                    zh: "聖加侖教堂",
+                    desc: "中世紀城市教堂。",
+                    lat: 50.0846,
+                    lon: 14.4222,
+                },
+                {
+                    en: "Church of St. Giles",
+                    zh: "聖吉拉斯教堂",
+                    desc: "哥德×巴洛克融合；管風琴著名。",
+                    lat: 50.0859,
+                    lon: 14.4209,
+                },
+                {
+                    en: "Kostel sv. Martina ve zdi",
+                    zh: "牆中聖馬丁",
+                    desc: "早期哥德小堂。",
+                    lat: 50.0848,
+                    lon: 14.4219,
+                },
+                {
+                    en: "Kostel U Salvátora (Reformed)",
+                    zh: "救主新教教堂",
+                    desc: "改革宗重鎮。",
+                    lat: 50.0887,
+                    lon: 14.4264,
+                },
+                {
+                    en: "Church of the Holy Spirit",
+                    zh: "聖神教堂",
+                    desc: "前多明我女修院遺址。",
+                    lat: 50.0895,
+                    lon: 14.4207,
+                },
+                {
+                    en: "Armenian Apostolic Church",
+                    zh: "亞美尼亞宗徒教會",
+                    desc: "族群與信仰多元。",
+                    lat: 50.0917,
+                    lon: 14.4271,
+                },
+                {
+                    en: "Bethlehem Chapel",
+                    zh: "伯利恆禮拜堂",
+                    desc: "胡斯講道地，宗改象徵。",
+                    lat: 50.0846,
+                    lon: 14.4179,
+                },
+                {
+                    en: "St. Salvator (Klementinum, Jesuit)",
+                    zh: "克萊門特學院聖救世主",
+                    desc: "耶穌會主教堂。",
+                    lat: 50.0865,
+                    lon: 14.4148,
+                },
+                {
+                    en: "Church of St. Francis of Assisi (Knights of the Cross)",
+                    zh: "聖方濟各教堂（紅星十字騎士團）",
+                    desc: "查理大橋舊城端的圓頂教堂。",
+                    lat: 50.0869,
+                    lon: 14.4119,
+                },
+                {
+                    en: "St. Clement (Byzantine Rite Cathedral)",
+                    zh: "聖克萊孟（東儀主教座）",
+                    desc: "烏克蘭東儀主教座堂。",
+                    lat: 50.086,
+                    lon: 14.4156,
+                },
+
+                // New Town
+                {
+                    en: "Church of Our Lady of the Snows",
+                    zh: "雪之聖母教堂",
+                    desc: "原計畫全城最大。",
+                    lat: 50.0812,
+                    lon: 14.4243,
+                },
+                {
+                    en: "St. Ignatius of Loyola",
+                    zh: "依納爵羅耀拉教堂",
+                    desc: "耶穌會地標，透視天頂畫。",
+                    lat: 50.0756,
+                    lon: 14.4219,
+                },
+                {
+                    en: "Church of St. Stephen (sv. Štěpán)",
+                    zh: "聖斯德望教堂",
+                    desc: "14世紀新城早期，塔景佳。",
+                    lat: 50.0755,
+                    lon: 14.4292,
+                },
+                {
+                    en: "Church of St. Henry & St. Cunigunde",
+                    zh: "聖亨利與聖昆尼貢德",
+                    desc: "哥德塔與皇權象徵。",
+                    lat: 50.0824,
+                    lon: 14.4317,
+                },
+                {
+                    en: "Holy Cross Church",
+                    zh: "聖十字教堂",
+                    desc: "醫院教堂，壁畫佳。",
+                    lat: 50.084,
+                    lon: 14.4278,
+                },
+                {
+                    en: "Church of St. Joseph (Capuchin)",
+                    zh: "聖若瑟（嘉布遣會）",
+                    desc: "修會簡樸之美。",
+                    lat: 50.0846,
+                    lon: 14.4297,
+                },
+                {
+                    en: "Jan Hus Chapel",
+                    zh: "揚胡斯禮拜堂",
+                    desc: "現代紀念建築。",
+                    lat: 50.0817,
+                    lon: 14.423,
+                },
+                {
+                    en: "Church of St. Apollinaire",
+                    zh: "聖阿玻里納教堂",
+                    desc: "14世紀哥德，內有壁畫。",
+                    lat: 50.0712,
+                    lon: 14.4325,
+                },
+                {
+                    en: "Church of St. Katherine of Alexandria",
+                    zh: "聖凱瑟琳教堂",
+                    desc: "粉色外牆與優雅內飾。",
+                    lat: 50.0705,
+                    lon: 14.4291,
+                },
+                {
+                    en: "St. Voršily (Ursulines)",
+                    zh: "聖烏爾蘇拉教堂",
+                    desc: "女子教育修會據點。",
+                    lat: 50.0774,
+                    lon: 14.4175,
+                },
+                {
+                    en: "Kostel sv. Václava na Zderaze",
+                    zh: "茲德拉澤的聖溫塞斯拉斯",
+                    desc: "胡斯派重要遺跡。",
+                    lat: 50.0765,
+                    lon: 14.4187,
+                },
+                {
+                    en: "Ss. Cyril and Methodius Cathedral (New Town)",
+                    zh: "聖西里爾與梅托狄烏斯主教座堂",
+                    desc: "二戰抵抗聖地。",
+                    lat: 50.0737,
+                    lon: 14.4185,
+                },
+
+                // Vyšehrad
+                {
+                    en: "Basilica of Sts. Peter & Paul (Vyšehrad)",
+                    zh: "維謝赫拉德聖伯多祿與保祿大殿",
+                    desc: "雙塔地標，鄰國家公墓。",
+                    lat: 50.0653,
+                    lon: 14.4198,
+                },
+                {
+                    en: "Rotunda sv. Martina (Vyšehrad)",
+                    zh: "聖馬丁圓形堂（維謝赫拉德）",
+                    desc: "11世紀石砌圓堂。",
+                    lat: 50.0645,
+                    lon: 14.4179,
+                },
+                {
+                    en: "Church of the Holy Trinity (Vyšehrad area)",
+                    zh: "聖三教堂（維謝赫拉德區）",
+                    desc: "高地小型靜修點。",
+                    lat: 50.0641,
+                    lon: 14.4206,
+                },
+
+                // Karlín / Žižkov / Vinohrady
+                {
+                    en: "Ss. Cyril and Methodius (Karlín)",
+                    zh: "聖西里爾與梅托狄烏斯（卡林）",
+                    desc: "19世紀新羅馬式巨構。",
+                    lat: 50.0918,
+                    lon: 14.4488,
+                },
+                {
+                    en: "Basilica of St. Ludmila (Vinohrady)",
+                    zh: "聖露德米拉大殿（維諾赫拉迪）",
+                    desc: "新哥德雙塔。",
+                    lat: 50.0755,
+                    lon: 14.4399,
+                },
+                {
+                    en: "Sacred Heart (Kostel Nejsvětějšího Srdce Páně)",
+                    zh: "耶穌聖心教堂（維諾赫拉迪）",
+                    desc: "Plečnik 傑作。",
+                    lat: 50.0793,
+                    lon: 14.4506,
+                },
+                {
+                    en: "Church of St. Procopius (Žižkov)",
+                    zh: "聖普羅科比教堂（日日科夫）",
+                    desc: "新哥德，工人區象徵。",
+                    lat: 50.0834,
+                    lon: 14.453,
+                },
+                {
+                    en: "Church of St. Peter at Poříčí",
+                    zh: "普熱奇的聖伯多祿教堂",
+                    desc: "羅馬式核心古堂。",
+                    lat: 50.0915,
+                    lon: 14.4366,
+                },
+
+                // Medieval small / Others
+                {
+                    en: "Rotunda of the Holy Cross (Menší)",
+                    zh: "小聖十字圓形堂",
+                    desc: "12世紀僅存圓堂。",
+                    lat: 50.0876,
+                    lon: 14.4228,
+                },
+                {
+                    en: "Rotunda of St. Longinus",
+                    zh: "聖隆基努斯圓形堂",
+                    desc: "早期圓堂，比例純粹。",
+                    lat: 50.0736,
+                    lon: 14.4272,
+                },
+                {
+                    en: "Emmaus Monastery – Our Lady & St. Charles the Great",
+                    zh: "艾瑪烏斯修道院",
+                    desc: "斯拉夫禮傳統，現代屋頂。",
+                    lat: 50.0739,
+                    lon: 14.4156,
+                },
+                {
+                    en: "St. John of Nepomuk na Skalce",
+                    zh: "岩上聖若望·納波穆克",
+                    desc: "殉道主題巴洛克。",
+                    lat: 50.0751,
+                    lon: 14.4144,
+                },
+                {
+                    en: "St. Clement's (Klementinum complex)",
+                    zh: "克萊門特學院聖克萊孟",
+                    desc: "耶穌會學院群一部分。",
+                    lat: 50.0861,
+                    lon: 14.4152,
+                },
+
+                // Agnes Monastery（第 50）
+                {
+                    en: "St. Agnes Monastery – Church of St. Francis & St. Salvator",
+                    zh: "聖艾格尼絲修道院（方濟與救世主）",
+                    desc: "中世紀女修院遺址，國家美術館分館。",
+                    lat: 50.0925,
+                    lon: 14.4292,
+                },
+            ];
+
+            // 顯示筆數（必須 50）
+            const countInfo = document.getElementById("countInfo");
+            countInfo.textContent = `Loaded places: ${PLACES.length} / 50`;
+            if (PLACES.length !== 50)
+                alert(`目前載入 ${PLACES.length} 筆，應為 50。請檢查清單。`);
+
+            /* ====== 距離 & 近似最短路徑（NN + 2-opt） ====== */
+            const toRad = (d) => (d * Math.PI) / 180;
+            function haversine(lat1, lon1, lat2, lon2) {
+                const R = 6371000;
+                const dphi = toRad(lat2 - lat1),
+                    dlmb = toRad(lon2 - lon1);
+                const a =
+                    Math.sin(dphi / 2) ** 2 +
+                    Math.cos(toRad(lat1)) *
+                        Math.cos(toRad(lat2)) *
+                        Math.sin(dlmb / 2) ** 2;
+                return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            }
+            function nearestNeighbor(points, startIdx = 0) {
+                const unvisited = new Set(points.map((_, i) => i));
+                const route = [startIdx];
+                unvisited.delete(startIdx);
+                while (unvisited.size) {
+                    const last = route[route.length - 1];
+                    let best = null,
+                        bestD = Infinity;
+                    for (const j of unvisited) {
+                        const d = haversine(
+                            points[last].lat,
+                            points[last].lon,
+                            points[j].lat,
+                            points[j].lon,
+                        );
+                        if (d < bestD) {
+                            bestD = d;
+                            best = j;
+                        }
+                    }
+                    route.push(best);
+                    unvisited.delete(best);
+                }
+                return route;
+            }
+            function twoOpt(route, pts, maxIter = 220) {
+                function seg(a, b) {
+                    return haversine(
+                        pts[a].lat,
+                        pts[a].lon,
+                        pts[b].lat,
+                        pts[b].lon,
+                    );
+                }
+                let improved = true,
+                    iter = 0;
+                while (improved && iter < maxIter) {
+                    improved = false;
+                    iter++;
+                    for (let i = 0; i < route.length - 2; i++) {
+                        for (let j = i + 2; j < route.length - 1; j++) {
+                            const A = route[i],
+                                B = route[i + 1],
+                                C = route[j],
+                                D = route[j + 1];
+                            const curr = seg(A, B) + seg(C, D);
+                            const swap = seg(A, C) + seg(B, D);
+                            if (swap + 1e-7 < curr) {
+                                const slice = route
+                                    .slice(i + 1, j + 1)
+                                    .reverse();
+                                route.splice(i + 1, j - i, ...slice);
+                                improved = true;
+                            }
+                        }
+                    }
+                }
+                return route;
+            }
+            function totalDistance(route, pts) {
+                let s = 0;
+                for (let i = 0; i < route.length - 1; i++) {
+                    const A = pts[route[i]],
+                        B = pts[route[i + 1]];
+                    s += haversine(A.lat, A.lon, B.lat, B.lon);
+                }
+                return s;
+            }
+
+            // 起點：泰恩聖母（找不到就 0）
+            const startIndex = PLACES.findIndex((p) =>
+                /Our Lady before Týn/i.test(p.en),
+            );
+            const nn = nearestNeighbor(
+                PLACES,
+                startIndex >= 0 ? startIndex : 0,
+            );
+            const order = twoOpt(nn.slice(), PLACES);
+
+            /* ====== Leaflet：Carto Positron 極簡底圖 ====== */
+            const map = L.map("map", { zoomControl: true });
+            L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+                    maxZoom: 19,
+                    attribution: "&copy; OpenStreetMap &copy; CARTO",
+                },
+            ).addTo(map);
+
+            function numberedIcon(n) {
+                return L.divIcon({
+                    className: "num-marker",
+                    html: String(n).padStart(2, "0"),
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14],
+                });
+            }
+
+            /* ====== Google Maps 連結（名稱搜尋優先 + 座標備援） & 筆記 ====== */
+            function gmapsByName(p) {
+                const q = encodeURIComponent(`${p.en}, Prague, Czechia`);
+                return `https://www.google.com/maps/search/?api=1&query=${q}`;
+            }
+            function gmapsByCoord(p) {
+                return `https://www.google.com/maps?q=${p.lat},${p.lon}`;
+            }
+            function noteKey(p) {
+                return `pp_note_${p.lat.toFixed(6)}_${p.lon.toFixed(6)}`;
+            }
+            function getNote(p) {
+                return localStorage.getItem(noteKey(p)) || "";
+            }
+
+            // 繪製點與路徑
+            const latlngs = [];
+            const list = document.getElementById("list");
+            const markersData = []; // 儲存標記資訊以便稍後更新
+
+            order.forEach((idx, i) => {
+                const p = PLACES[idx];
+                latlngs.push([p.lat, p.lon]);
+                const title = `${String(i + 1).padStart(2, "0")}. ${p.en}（${p.zh}）`;
+                const id = noteKey(p);
+                const seqNum = i + 1;
+
+                markersData.push({ p, id, seqNum, title });
+
+                // 創建函數來生成 popup 內容，每次打開時都會重新讀取 localStorage
+                function getPopupContent() {
+                    const currentNote = getNote(p);
+                    return `
+    <h3>${title}</h3>
+    <p>${p.desc}</p>
+    <div class="popup-actions">
+      <a class="primary" href="${gmapsByName(p)}" target="_blank" rel="noopener">用名稱開啟 Google Maps</a>
+      <a href="${gmapsByCoord(p)}" target="_blank" rel="noopener">用座標開啟</a>
+      <button onclick="showFullscreenNumber(${seqNum})">🔢 顯示號碼</button>
+    </div>
+    <div style="margin-top:8px;">
+      <textarea class="note-box" id="${id}" placeholder="在此輸入筆記（僅儲存在本機）">${currentNote}</textarea>
+      <div class="popup-actions" style="margin-top:6px;">
+        <button class="primary" onclick="saveNote('${id}')">💾 儲存筆記</button>
+      </div>
+    </div>`;
+                }
+
+                const m = L.marker([p.lat, p.lon], {
+                    icon: numberedIcon(seqNum),
+                    title,
+                });
+
+                // 使用 Leaflet 的 popup 事件，在每次打開時更新內容
+                const popup = L.popup({ maxWidth: 320 });
+                m.bindPopup(popup);
+
+                m.on("click", function () {
+                    popup.setContent(getPopupContent());
+                });
+
+                m.addTo(map);
+
+                // 清單列出（可點）
+                const li = document.createElement("li");
+                li.innerHTML = `<a href="#" onclick="return false;">${title}</a>`;
+                li.addEventListener("click", () => {
+                    popup.setContent(getPopupContent());
+                    m.openPopup();
+                    map.panTo([p.lat, p.lon]);
+                });
+                list.appendChild(li);
+            });
+
+            // 路徑 & 視窗
+            const poly = L.polyline(latlngs, {
+                color: "#0A84FF",
+                weight: 4,
+                opacity: 0.85,
+            }).addTo(map);
+            map.fitBounds(poly.getBounds(), { padding: [28, 28] });
+
+            // 總距離
+            const distKm = (totalDistance(order, PLACES) / 1000).toFixed(1);
+            document.getElementById("dist").textContent =
+                `Total route ≈ ${distKm} km | Points: ${order.length}`;
+
+            // 清單抽屜 toggle
+            const drawer = document.getElementById("drawer");
+            document.getElementById("listBtn").addEventListener("click", () => {
+                drawer.style.display =
+                    drawer.style.display === "block" ? "none" : "block";
+            });
+
+            /* ====== CSV 下載：50 座＋筆記 ====== */
+            function downloadCSV() {
+                const header = [
+                    "Index",
+                    "English",
+                    "Chinese",
+                    "Description",
+                    "Lat",
+                    "Lon",
+                    "Note",
+                ];
+                const rows = order.map((idx, i) => {
+                    const p = PLACES[idx];
+                    const note = (getNote(p) || "").replace(/\r?\n/g, " ");
+                    return [i + 1, p.en, p.zh, p.desc, p.lat, p.lon, note];
+                });
+                const csv = [header, ...rows]
+                    .map((r) =>
+                        r
+                            .map((v) => {
+                                const s = String(v ?? "");
+                                return /[",\n]/.test(s)
+                                    ? `"${s.replace(/"/g, '""')}"`
+                                    : s;
+                            })
+                            .join(","),
+                    )
+                    .join("\n");
+                const blob = new Blob([csv], {
+                    type: "text/csv;charset=utf-8;",
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "Prague_Pilgrim_Notes.csv";
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+            document
+                .getElementById("downloadCsvBtn")
+                .addEventListener("click", downloadCSV);
+
+            /* ====== 使用者定位 ====== */
+            let userMarker, userCircle;
+            document
+                .getElementById("locateBtn")
+                .addEventListener("click", () => {
+                    // 請求定位權限並設定視圖
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                const lat = position.coords.latitude;
+                                const lon = position.coords.longitude;
+                                const accuracy = position.coords.accuracy;
+
+                                if (userMarker) {
+                                    map.removeLayer(userMarker);
+                                    map.removeLayer(userCircle);
+                                }
+
+                                userMarker = L.marker([lat, lon], {
+                                    title: "Your Location",
+                                }).addTo(map);
+
+                                userCircle = L.circle([lat, lon], {
+                                    radius: accuracy,
+                                    color: "#34c759",
+                                }).addTo(map);
+
+                                map.setView([lat, lon], 16);
+                            },
+                            (error) => {
+                                let msg = "定位失敗";
+                                if (error.code === 1)
+                                    msg =
+                                        "定位失敗：請在瀏覽器設定中允許位置權限";
+                                else if (error.code === 2)
+                                    msg = "定位失敗：無法取得位置資訊";
+                                else if (error.code === 3)
+                                    msg = "定位失敗：請求逾時";
+                                alert(msg);
+                            },
+                            {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 0,
+                            },
+                        );
+                    } else {
+                        alert("您的瀏覽器不支援定位功能");
+                    }
+                });
+
+            // 保留 Leaflet 的定位事件處理（作為備用）
+            map.on("locationfound", (e) => {
+                if (userMarker) {
+                    map.removeLayer(userMarker);
+                    map.removeLayer(userCircle);
+                }
+                userMarker = L.marker(e.latlng, {
+                    title: "Your Location",
+                }).addTo(map);
+                userCircle = L.circle(e.latlng, {
+                    radius: e.accuracy,
+                    color: "#34c759",
+                }).addTo(map);
+                if (!map.getBounds().contains(e.latlng)) map.panTo(e.latlng);
+            });
+            map.on("locationerror", (e) => alert("定位失敗：" + e.message));
+
+            /* ====== 全域函數：儲存筆記 & 顯示全屏號碼 ====== */
+            window.saveNote = function (noteId) {
+                const textarea = document.getElementById(noteId);
+                if (textarea) {
+                    const text = textarea.value;
+                    localStorage.setItem(noteId, (text || "").trim());
+                    alert("已儲存至本機");
+                }
+            };
+
+            window.showFullscreenNumber = function (num) {
+                const display = document.getElementById("fullscreenNumber");
+                const numberEl = document.getElementById("bigNumber");
+                numberEl.textContent = String(num).padStart(2, "0");
+                display.classList.add("show");
+            };
+        </script>
+    </body>
+</html>
