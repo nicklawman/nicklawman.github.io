@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="utf-8" />
+        <title>Math08 Knowledge Forest (128x128) + NPC Wander</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <style>
+            html,
+            body {
+                margin: 0;
+                height: 100%;
+                overflow: hidden;
+                background: #111;
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    "PingFang TC",
+                    "Noto Sans TC",
+                    Arial;
+            }
+            #hint {
+                position: fixed;
+                left: 12px;
+                top: 10px;
+                z-index: 10;
+                color: #ddd;
+                font-size: 14px;
+                background: rgba(0, 0, 0, 0.5);
+                padding: 8px 10px;
+                border-radius: 10px;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                user-select: none;
+            }
+
+            /* Knowledge popup */
+            #kpMask {
+                position: fixed;
+                inset: 0;
+                display: none;
+                z-index: 20;
+                pointer-events: none;
+            }
+            #kpBox {
+                pointer-events: auto;
+                position: absolute;
+                left: 50%;
+                bottom: 20px;
+                transform: translateX(-50%);
+                width: min(860px, calc(100vw - 24px));
+                background: rgba(0, 0, 0, 0.62);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                border-radius: 14px;
+                padding: 14px 14px 12px;
+                color: #fff;
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+                backdrop-filter: blur(6px);
+            }
+            #kpLine1 {
+                font-weight: 750;
+                font-size: 15px;
+                margin-bottom: 6px;
+            }
+            #kpLine2 {
+                font-size: 13px;
+                line-height: 1.5;
+                opacity: 0.95;
+                white-space: pre-wrap;
+            }
+            #kpStars {
+                margin-top: 10px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            #kpStarsLabel {
+                font-size: 12px;
+                opacity: 0.8;
+                min-width: 92px;
+            }
+            .starBtn {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                background: rgba(255, 255, 255, 0.06);
+                color: #fff;
+                cursor: pointer;
+                font-size: 18px;
+                line-height: 32px;
+                text-align: center;
+                user-select: none;
+            }
+            .starBtn:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+            #kpHint {
+                margin-top: 8px;
+                font-size: 12px;
+                opacity: 0.75;
+            }
+
+            /* NPC popup */
+            #npcMask {
+                position: fixed;
+                inset: 0;
+                display: none;
+                z-index: 21;
+                pointer-events: none;
+            }
+            #npcBox {
+                pointer-events: auto;
+                position: absolute;
+                left: 50%;
+                bottom: 28px;
+                transform: translateX(-50%);
+                width: min(720px, calc(100vw - 24px));
+                background: rgba(0, 0, 0, 0.62);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                border-radius: 14px;
+                padding: 14px 14px 12px;
+                color: #fff;
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+                backdrop-filter: blur(6px);
+                font:
+                    14px/1.4 system-ui,
+                    -apple-system,
+                    Arial;
+            }
+            #npcRow {
+                display: flex;
+                gap: 14px;
+                align-items: center;
+            }
+            .portrait {
+                width: 68px;
+                height: 68px;
+                border-radius: 12px;
+                overflow: hidden;
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                background: rgba(255, 255, 255, 0.06);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .portrait img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            #npcText {
+                flex: 1;
+                padding: 2px 0;
+            }
+            #npcTitle {
+                font-weight: 650;
+                margin-bottom: 4px;
+                opacity: 0.95;
+            }
+            #npcBody {
+                opacity: 0.92;
+            }
+            #npcHint {
+                opacity: 0.75;
+                font-size: 12px;
+                margin-top: 6px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="hint">
+            ← → 轉向 (30°)<br />
+            ↑ ↓ 前進/後退<br />
+            Shift + ↑ ↓ 仰角<br />
+            靠近樹：知識點 + 星等<br />
+            靠近 NPC：顯示對話框
+        </div>
+
+        <!-- Knowledge popup -->
+        <div id="kpMask">
+            <div id="kpBox">
+                <div id="kpLine1"></div>
+                <div id="kpLine2"></div>
+                <div id="kpStars">
+                    <div id="kpStarsLabel">理解評分</div>
+                    <div id="kpStar1" class="starBtn" title="1 星">★</div>
+                    <div id="kpStar2" class="starBtn" title="2 星">★</div>
+                    <div id="kpStar3" class="starBtn" title="3 星">★</div>
+                    <div id="kpStar4" class="starBtn" title="4 星">★</div>
+                </div>
+                <div id="kpHint">離開樹的相鄰格子後，自動關閉。</div>
+            </div>
+        </div>
+
+        <!-- NPC popup -->
+        <div id="npcMask">
+            <div id="npcBox">
+                <div id="npcRow">
+                    <div class="portrait">
+                        <img id="npcPlayerImg" src="player.png" alt="player" />
+                    </div>
+                    <div class="portrait">
+                        <img id="npcImg" src="b.png" alt="npc" />
+                    </div>
+                    <div id="npcText">
+                        <div id="npcTitle">Meet NPC</div>
+                        <div id="npcBody">
+                            你靠近了一位 NPC。（之後這裡放 AI 回應）
+                        </div>
+                        <div id="npcHint">離開相鄰格子後，自動關閉。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data -->
+        <script src="./math08.js"></script>
+
+        <!-- three.js (no module) -->
+        <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+        <script>
+            /***********************
+             * Data: MATH08
+             ***********************/
+            if (!window.MATH08 || !Array.isArray(window.MATH08)) {
+                alert(
+                    "找不到 MATH08。請確認 math08.js 與 index.html 在同一資料夾。",
+                );
+            }
+            const KPS = (window.MATH08 || [])
+                .map((row) => ({
+                    code: String(row[0] || ""),
+                    desc: String(row[1] || ""),
+                    raw: row,
+                }))
+                .filter((x) => x.code);
+
+            const CATEGORY_MAP = {
+                N: "數與量",
+                S: "空間與形狀",
+                G: "坐標幾何",
+                R: "關係",
+                A: "代數",
+                F: "函數",
+                D: "資料與不確定性",
+            };
+
+            function parseKPCode(code) {
+                const parts = code.split("-");
+                const cat = (parts[0] || "").trim();
+                let gradeRaw = (parts[1] || "").trim();
+                let grade = parseInt(gradeRaw, 10);
+                if (!Number.isFinite(grade)) grade = 0;
+                const seq = (parts[2] || "").trim();
+                return { cat, grade, seq };
+            }
+
+            function gradeLabel(grade) {
+                if (grade >= 1 && grade <= 6)
+                    return (
+                        "小" + ["一", "二", "三", "四", "五", "六"][grade - 1]
+                    );
+                if (grade >= 7 && grade <= 9)
+                    return "國" + ["一", "二", "三"][grade - 7];
+                if (grade >= 10 && grade <= 12)
+                    return "高" + ["一", "二", "三"][grade - 10];
+                return "未知";
+            }
+
+            /***********************
+             * LocalStorage: kpranking
+             ***********************/
+            const RANKING_KEY = "kpranking";
+            function loadRankingMap() {
+                try {
+                    return (
+                        JSON.parse(localStorage.getItem(RANKING_KEY) || "{}") ||
+                        {}
+                    );
+                } catch {
+                    return {};
+                }
+            }
+            function saveRankingMap(map) {
+                try {
+                    localStorage.setItem(RANKING_KEY, JSON.stringify(map));
+                } catch {}
+            }
+            const rankingMap = loadRankingMap();
+            function getRank(code) {
+                const n = parseInt(rankingMap[code], 10);
+                if (Number.isFinite(n) && n >= 1 && n <= 4) return n;
+                return 1;
+            }
+            function setRank(code, rank) {
+                rankingMap[code] = rank;
+                saveRankingMap(rankingMap);
+            }
+            function rankCanopyColor(rank) {
+                if (rank === 1) return 0xd83a3a; // red
+                if (rank === 2) return 0xf2c94c; // yellow
+                if (rank === 3) return 0x1f6f3a; // dark green
+                return 0x183a8f; // dark blue
+            }
+
+            /***********************
+             * Scene / Camera / Renderer
+             ***********************/
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x88aacc);
+
+            const camera = new THREE.PerspectiveCamera(
+                75,
+                innerWidth / innerHeight,
+                0.1,
+                900,
+            );
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(innerWidth, innerHeight);
+            renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+            document.body.appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+            const sun = new THREE.DirectionalLight(0xffffff, 0.75);
+            sun.position.set(60, 110, 30);
+            scene.add(sun);
+
+            /***********************
+             * World (128x128)
+             ***********************/
+            const SIZE = 128;
+            const HALF = SIZE / 2;
+
+            function heightFn(x, z) {
+                return Math.max(
+                    1,
+                    Math.round(2 + Math.sin(x * 0.12) + Math.cos(z * 0.12)),
+                );
+            }
+
+            const heights = [];
+            const occupied = {}; // blocks trees & NPCs
+
+            const blockGeo = new THREE.BoxGeometry(1, 1, 1);
+            const groundMat = new THREE.MeshStandardMaterial({
+                color: 0x55aa55,
+            });
+
+            for (let x = 0; x < SIZE; x++) {
+                heights[x] = [];
+                for (let z = 0; z < SIZE; z++) {
+                    const h = heightFn(x, z);
+                    heights[x][z] = h;
+                    for (let y = 0; y < h; y++) {
+                        const b = new THREE.Mesh(blockGeo, groundMat);
+                        b.position.set(x - HALF + 0.5, y + 0.5, z - HALF + 0.5);
+                        scene.add(b);
+                    }
+                }
+            }
+
+            function toGrid(x, z) {
+                return { gx: Math.floor(x + HALF), gz: Math.floor(z + HALF) };
+            }
+            function gridToWorld(gx, gz) {
+                return { x: gx - HALF + 0.5, z: gz - HALF + 0.5 };
+            }
+            function groundHeightWorld(x, z) {
+                const { gx, gz } = toGrid(x, z);
+                if (gx < 0 || gz < 0 || gx >= SIZE || gz >= SIZE) return 0;
+                return heights[gx][gz];
+            }
+            function blockedWorld(x, z) {
+                const { gx, gz } = toGrid(x, z);
+                return !!occupied[`${gx},${gz}`];
+            }
+            function clampToWorld(x, z) {
+                return {
+                    x: THREE.MathUtils.clamp(x, -HALF + 1, HALF - 1),
+                    z: THREE.MathUtils.clamp(z, -HALF + 1, HALF - 1),
+                };
+            }
+            function occupyCell(gx, gz) {
+                occupied[`${gx},${gz}`] = true;
+            }
+
+            /***********************
+             * Sprites: player + NPCs
+             * - pedestal 0.5 blue
+             ***********************/
+            const pedestalGeo = new THREE.BoxGeometry(1, 0.5, 1);
+            const pedestalMat = new THREE.MeshStandardMaterial({
+                color: 0x2a62ff,
+            });
+            const texLoader = new THREE.TextureLoader();
+
+            const SPRITE_SCALE = 0.5;
+            const PEDESTAL_H = 0.5;
+            const BREATH_AMP = 0.02;
+
+            function makePedestalAt(x, z) {
+                const y = groundHeightWorld(x, z);
+                const p = new THREE.Mesh(pedestalGeo, pedestalMat);
+                p.position.set(x, y + 0.25, z);
+                scene.add(p);
+                return p;
+            }
+
+            function makeBillboardSprite(pngFile, x, z, opts = {}) {
+                const baseHeight = (opts.height ?? 2.0) * SPRITE_SCALE;
+                const baseWidth = (opts.width ?? 1.2) * SPRITE_SCALE;
+
+                const tex = texLoader.load(
+                    pngFile,
+                    () => {},
+                    undefined,
+                    () => {},
+                );
+                tex.magFilter = THREE.NearestFilter;
+                tex.minFilter = THREE.NearestFilter;
+
+                const mat = new THREE.MeshBasicMaterial({
+                    map: tex,
+                    transparent: true,
+                    alphaTest: 0.05,
+                    depthTest: true,
+                    depthWrite: false,
+                });
+
+                const geo = new THREE.PlaneGeometry(baseWidth, baseHeight);
+                const mesh = new THREE.Mesh(geo, mat);
+
+                const pedestal = makePedestalAt(x, z);
+                const gY = groundHeightWorld(x, z);
+                const bottomY = gY + PEDESTAL_H;
+
+                mesh.position.set(x, bottomY + baseHeight / 2, z);
+                mesh.userData = {
+                    pngFile,
+                    baseWidth,
+                    baseHeight,
+                    bottomY,
+                    phase: Math.random() * Math.PI * 2,
+                    pedestal,
+                };
+                scene.add(mesh);
+                return mesh;
+            }
+
+            function placeSpriteOnGround(sprite, x, z) {
+                const gY = groundHeightWorld(x, z);
+                const bottomY = gY + PEDESTAL_H;
+                sprite.userData.bottomY = bottomY;
+
+                sprite.userData.pedestal.position.set(
+                    x,
+                    gY + PEDESTAL_H / 2,
+                    z,
+                );
+                sprite.position.x = x;
+                sprite.position.z = z;
+            }
+
+            function findFreeSpot(preferX, preferZ) {
+                let x = preferX,
+                    z = preferZ;
+                for (let i = 0; i < 2000; i++) {
+                    const { gx, gz } = toGrid(x, z);
+                    if (
+                        gx >= 1 &&
+                        gz >= 1 &&
+                        gx < SIZE - 1 &&
+                        gz < SIZE - 1 &&
+                        !occupied[`${gx},${gz}`]
+                    )
+                        return { x, z };
+                    x = Math.random() * SIZE - HALF + 0.5;
+                    z = Math.random() * SIZE - HALF + 0.5;
+                }
+                return { x: 0, z: 0 };
+            }
+
+            const start = findFreeSpot(0, 0);
+            const player = makeBillboardSprite("player.png", start.x, start.z, {
+                height: 2,
+                width: 1.2,
+            });
+
+            // NPCs initial
+            const npcBpos = findFreeSpot(-10, -6);
+            const npcCpos = findFreeSpot(10, -6);
+            const npcDpos = findFreeSpot(0, 12);
+
+            const npc1 = makeBillboardSprite("b.png", npcBpos.x, npcBpos.z, {
+                height: 2,
+                width: 1.2,
+            });
+            const npc2 = makeBillboardSprite("c.png", npcCpos.x, npcCpos.z, {
+                height: 2,
+                width: 1.2,
+            });
+            const npc3 = makeBillboardSprite("d.png", npcDpos.x, npcDpos.z, {
+                height: 2,
+                width: 1.2,
+            });
+
+            const npcs = [npc1, npc2, npc3];
+            const sprites = [player, ...npcs];
+
+            function occupyEntityCell(mesh) {
+                const { gx, gz } = toGrid(mesh.position.x, mesh.position.z);
+                if (gx >= 0 && gz >= 0 && gx < SIZE && gz < SIZE)
+                    occupyCell(gx, gz);
+            }
+            // mark NPCs as occupied (player can't step onto)
+            occupyEntityCell(npc1);
+            occupyEntityCell(npc2);
+            occupyEntityCell(npc3);
+
+            /***********************
+             * Knowledge Trees
+             * - random, evenly spread, not too tight
+             ***********************/
+            const trunkGeo = new THREE.BoxGeometry(0.55, 2.2, 0.55);
+            const canopyGeo = new THREE.BoxGeometry(1.35, 1.35, 1.35);
+            const labelPlaneGeo = new THREE.PlaneGeometry(0.62, 0.45);
+            const trunkMat = new THREE.MeshStandardMaterial({
+                color: 0x6b4a2b,
+            });
+
+            function makeTextTexture(text) {
+                const c = document.createElement("canvas");
+                c.width = 256;
+                c.height = 128;
+                const ctx = c.getContext("2d");
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.fillStyle = "rgba(0,0,0,0.28)";
+                ctx.fillRect(0, 0, c.width, c.height);
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 64px system-ui, -apple-system, Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(text, c.width / 2, c.height / 2);
+                const tex = new THREE.CanvasTexture(c);
+                tex.magFilter = THREE.NearestFilter;
+                tex.minFilter = THREE.NearestFilter;
+                return tex;
+            }
+
+            function addGradeLabels(group, gradeText) {
+                const tex = makeTextTexture(gradeText);
+                const mat = new THREE.MeshBasicMaterial({
+                    map: tex,
+                    transparent: true,
+                });
+                const offsets = [
+                    { x: 0, z: 0.3, ry: 0 },
+                    { x: 0.3, z: 0, ry: -Math.PI / 2 },
+                    { x: 0, z: -0.3, ry: Math.PI },
+                    { x: -0.3, z: 0, ry: Math.PI / 2 },
+                ];
+                for (const o of offsets) {
+                    const p = new THREE.Mesh(labelPlaneGeo, mat);
+                    p.position.set(o.x, 1.1, o.z);
+                    p.rotation.y = o.ry;
+                    group.add(p);
+                }
+            }
+
+            // Trees list for engagement
+            const trees = []; // { code, cat, catName, grade, gradeText, desc, gx,gz, canopyMesh }
+
+            // Sort by grade for distribution banding
+            const sorted = KPS.slice().sort((a, b) => {
+                const pa = parseKPCode(a.code),
+                    pb = parseKPCode(b.code);
+                if (pa.grade !== pb.grade) return pa.grade - pb.grade;
+                if (pa.cat !== pb.cat) return pa.cat.localeCompare(pb.cat);
+                return pa.seq.localeCompare(pb.seq, "zh-Hant", {
+                    numeric: true,
+                });
+            });
+
+            // Random placement with:
+            // - grade band across X (left->right)
+            // - random Z full range
+            // - minimum separation in grid cells
+            const MIN_TREE_DIST = 3; // grid distance (Manhattan-ish)
+            const PAD = 2; // keep away from edges
+            const BAND_W = Math.floor((SIZE - PAD * 2) / 12);
+
+            // To avoid tight clusters, keep a list of tree positions and reject close ones
+            const placed = []; // {gx,gz}
+
+            function tooClose(gx, gz) {
+                for (const p of placed) {
+                    const dx = gx - p.gx;
+                    const dz = gz - p.gz;
+                    // simple circular distance check
+                    if (dx * dx + dz * dz < MIN_TREE_DIST * MIN_TREE_DIST)
+                        return true;
+                }
+                return false;
+            }
+
+            function placeTreeForGrade(grade) {
+                // grade 1..12 -> band index 0..11
+                const bandIdx = Math.max(0, Math.min(11, (grade || 1) - 1));
+                const x0 = PAD + bandIdx * BAND_W;
+                const x1 = Math.min(SIZE - PAD - 1, x0 + BAND_W - 1);
+
+                for (let tries = 0; tries < 4000; tries++) {
+                    const gx = Math.floor(THREE.MathUtils.randInt(x0, x1));
+                    const gz = Math.floor(
+                        THREE.MathUtils.randInt(PAD, SIZE - PAD - 1),
+                    );
+                    if (occupied[`${gx},${gz}`]) continue;
+                    if (tooClose(gx, gz)) continue;
+                    return { gx, gz };
+                }
+                // fallback: brute force random anywhere
+                for (let tries = 0; tries < 6000; tries++) {
+                    const gx = THREE.MathUtils.randInt(PAD, SIZE - PAD - 1);
+                    const gz = THREE.MathUtils.randInt(PAD, SIZE - PAD - 1);
+                    if (occupied[`${gx},${gz}`]) continue;
+                    if (tooClose(gx, gz)) continue;
+                    return { gx, gz };
+                }
+                return null;
+            }
+
+            function addKnowledgeTree(kp) {
+                const p = parseKPCode(kp.code);
+                const pos = placeTreeForGrade(p.grade || 1);
+                if (!pos) return;
+
+                const { gx, gz } = pos;
+                occupyCell(gx, gz);
+                placed.push({ gx, gz });
+
+                const w = gridToWorld(gx, gz);
+                const baseY = heights[gx][gz];
+
+                const group = new THREE.Group();
+                group.position.set(w.x, baseY, w.z);
+
+                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                trunk.position.set(0, 1.1, 0);
+                group.add(trunk);
+
+                const gText = gradeLabel(p.grade);
+                addGradeLabels(group, gText);
+
+                const rank = getRank(kp.code);
+                const canopyMat = new THREE.MeshStandardMaterial({
+                    color: rankCanopyColor(rank),
+                });
+                const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+                canopy.position.set(0, 2.6, 0);
+                group.add(canopy);
+
+                scene.add(group);
+
+                trees.push({
+                    code: kp.code,
+                    cat: p.cat,
+                    catName: CATEGORY_MAP[p.cat] || "未知類別",
+                    grade: p.grade,
+                    gradeText: gText,
+                    desc: kp.desc,
+                    gx,
+                    gz,
+                    canopyMesh: canopy,
+                });
+            }
+
+            for (const kp of sorted) addKnowledgeTree(kp);
+
+            /***********************
+             * Popups: Knowledge first, then NPC
+             ***********************/
+            const kpMask = document.getElementById("kpMask");
+            const kpLine1 = document.getElementById("kpLine1");
+            const kpLine2 = document.getElementById("kpLine2");
+            const kpStarBtns = [
+                document.getElementById("kpStar1"),
+                document.getElementById("kpStar2"),
+                document.getElementById("kpStar3"),
+                document.getElementById("kpStar4"),
+            ];
+
+            let engagedTree = null;
+
+            function setStarUI(rank) {
+                for (let i = 0; i < 4; i++) {
+                    kpStarBtns[i].style.opacity = i < rank ? "1.0" : "0.35";
+                    kpStarBtns[i].style.borderColor =
+                        i < rank
+                            ? "rgba(255,255,255,.35)"
+                            : "rgba(255,255,255,.18)";
+                }
+            }
+            function showTreeDialog(t) {
+                kpMask.style.display = "block";
+                kpLine1.textContent = `${t.cat}（${t.catName}） · ${t.gradeText} · ${t.code}`;
+                kpLine2.textContent = t.desc;
+                setStarUI(getRank(t.code));
+            }
+            function hideTreeDialog() {
+                kpMask.style.display = "none";
+            }
+
+            function applyRankToTree(t, rank) {
+                setRank(t.code, rank);
+                t.canopyMesh.material.color.setHex(rankCanopyColor(rank));
+                setStarUI(rank);
+            }
+
+            kpStarBtns.forEach((btn, idx) => {
+                btn.addEventListener("click", () => {
+                    if (!engagedTree) return;
+                    applyRankToTree(engagedTree, idx + 1);
+                });
+            });
+
+            // NPC popup
+            const npcMask = document.getElementById("npcMask");
+            const npcImg = document.getElementById("npcImg");
+            const npcTitle = document.getElementById("npcTitle");
+            const npcBody = document.getElementById("npcBody");
+
+            let engagedNpc = null;
+
+            function showNpcDialog(npc) {
+                npcMask.style.display = "block";
+                npcImg.src = npc.userData.pngFile;
+                npcTitle.textContent = "Meet NPC";
+                npcBody.textContent =
+                    "你靠近了一位 NPC。（之後把 AI 對話放在這裡）";
+            }
+            function hideNpcDialog() {
+                npcMask.style.display = "none";
+            }
+
+            function manhattanAdjCell(aGX, aGZ, bGX, bGZ) {
+                return Math.abs(aGX - bGX) + Math.abs(aGZ - bGZ) === 1;
+            }
+
+            function findAdjacentTree(px, pz) {
+                const pg = toGrid(px, pz);
+                for (const t of trees) {
+                    if (manhattanAdjCell(pg.gx, pg.gz, t.gx, t.gz)) return t;
+                }
+                return null;
+            }
+
+            function findAdjacentNpc(px, pz) {
+                const pg = toGrid(px, pz);
+                for (const npc of npcs) {
+                    const ng = toGrid(npc.position.x, npc.position.z);
+                    if (manhattanAdjCell(pg.gx, pg.gz, ng.gx, ng.gz))
+                        return npc;
+                }
+                return null;
+            }
+
+            function updateEngagement() {
+                // Knowledge tree has priority
+                const t = findAdjacentTree(px, pz);
+                if (t) {
+                    if (engagedTree !== t) {
+                        engagedTree = t;
+                        showTreeDialog(t);
+                    }
+                    // hide NPC popup if any
+                    if (engagedNpc) {
+                        engagedNpc = null;
+                        hideNpcDialog();
+                    }
+                    return;
+                } else {
+                    if (engagedTree) {
+                        engagedTree = null;
+                        hideTreeDialog();
+                    }
+                }
+
+                const n = findAdjacentNpc(px, pz);
+                if (n && engagedNpc !== n) {
+                    engagedNpc = n;
+                    showNpcDialog(n);
+                } else if (!n && engagedNpc) {
+                    engagedNpc = null;
+                    hideNpcDialog();
+                }
+            }
+
+            /***********************
+             * Player movement & camera
+             ***********************/
+            let yaw = 0;
+            let pitch = 0;
+            let px = start.x,
+                pz = start.z;
+
+            function updateCamera() {
+                const playerGroundY = groundHeightWorld(px, pz);
+                const eyeY = playerGroundY + 1.6;
+
+                const backDist = 2.2;
+                const forwardX = -Math.sin(yaw);
+                const forwardZ = -Math.cos(yaw);
+
+                const camX = px - forwardX * backDist;
+                const camZ = pz - forwardZ * backDist;
+
+                const camGround = groundHeightWorld(camX, camZ);
+                const camY = Math.max(camGround + 1.2, eyeY + 0.2);
+
+                camera.position.set(camX, camY, camZ);
+
+                const lookY = playerGroundY + 1.2;
+                const lookTarget = new THREE.Vector3(
+                    px + forwardX * 2.0,
+                    lookY,
+                    pz + forwardZ * 2.0,
+                );
+                camera.lookAt(lookTarget);
+
+                camera.rotation.order = "YXZ";
+                camera.rotation.x += pitch;
+            }
+
+            addEventListener("keydown", (e) => {
+                const step = 1;
+                const turn = THREE.MathUtils.degToRad(30);
+                const tilt = THREE.MathUtils.degToRad(20);
+
+                if (e.code === "ArrowLeft") yaw += turn;
+                if (e.code === "ArrowRight") yaw -= turn;
+
+                if (e.shiftKey && e.code === "ArrowUp") {
+                    pitch = Math.min(
+                        pitch + tilt,
+                        THREE.MathUtils.degToRad(60),
+                    );
+                } else if (e.shiftKey && e.code === "ArrowDown") {
+                    pitch = Math.max(
+                        pitch - tilt,
+                        THREE.MathUtils.degToRad(-60),
+                    );
+                } else if (e.code === "ArrowUp") {
+                    const nx = px + -Math.sin(yaw) * step;
+                    const nz = pz + -Math.cos(yaw) * step;
+                    if (!blockedWorld(nx, nz)) {
+                        px = nx;
+                        pz = nz;
+                    }
+                } else if (e.code === "ArrowDown") {
+                    const nx = px - -Math.sin(yaw) * step;
+                    const nz = pz - -Math.cos(yaw) * step;
+                    if (!blockedWorld(nx, nz)) {
+                        px = nx;
+                        pz = nz;
+                    }
+                }
+
+                const c = clampToWorld(px, pz);
+                px = c.x;
+                pz = c.z;
+
+                placeSpriteOnGround(player, px, pz);
+                updateCamera();
+                updateEngagement();
+            });
+
+            /***********************
+             * NPC wandering (slow, inside boundary, avoid occupied)
+             ***********************/
+            // give each NPC a target tile, and move step-by-step
+            const npcState = npcs.map((npc) => ({
+                npc,
+                // store as grid positions
+                gx: toGrid(npc.position.x, npc.position.z).gx,
+                gz: toGrid(npc.position.x, npc.position.z).gz,
+                tx: null,
+                tz: null,
+                cooldown: 0,
+            }));
+
+            // we need an occupancy model that allows NPC to move:
+            // occupied includes trees + other NPCs + player? (player not occupied)
+            // When an NPC moves, update occupied old/new cell.
+            function setNpcCell(state, newGX, newGZ) {
+                // clear old cell
+                occupied[`${state.gx},${state.gz}`] = false;
+                // set new
+                state.gx = newGX;
+                state.gz = newGZ;
+                occupied[`${state.gx},${state.gz}`] = true;
+
+                const w = gridToWorld(state.gx, state.gz);
+                placeSpriteOnGround(state.npc, w.x, w.z);
+            }
+
+            function pickNpcTarget(state) {
+                // random walk within a small radius, but keep inside bounds
+                const r = 6;
+                const baseGX = state.gx,
+                    baseGZ = state.gz;
+                for (let i = 0; i < 200; i++) {
+                    const tgx = THREE.MathUtils.clamp(
+                        baseGX + THREE.MathUtils.randInt(-r, r),
+                        2,
+                        SIZE - 3,
+                    );
+                    const tgz = THREE.MathUtils.clamp(
+                        baseGZ + THREE.MathUtils.randInt(-r, r),
+                        2,
+                        SIZE - 3,
+                    );
+                    if (!occupied[`${tgx},${tgz}`]) {
+                        state.tx = tgx;
+                        state.tz = tgz;
+                        return;
+                    }
+                }
+                state.tx = baseGX;
+                state.tz = baseGZ;
+            }
+
+            function npcStepToward(state) {
+                if (state.cooldown > 0) {
+                    state.cooldown -= 1;
+                    return;
+                }
+
+                if (
+                    state.tx === null ||
+                    state.tz === null ||
+                    (state.gx === state.tx && state.gz === state.tz)
+                ) {
+                    pickNpcTarget(state);
+                    state.cooldown = THREE.MathUtils.randInt(15, 45); // pause a bit
+                    return;
+                }
+
+                // choose one step in x or z toward target
+                const dx = state.tx - state.gx;
+                const dz = state.tz - state.gz;
+
+                const cand = [];
+                if (dx !== 0)
+                    cand.push({ gx: state.gx + Math.sign(dx), gz: state.gz });
+                if (dz !== 0)
+                    cand.push({ gx: state.gx, gz: state.gz + Math.sign(dz) });
+
+                // randomize which axis first
+                if (cand.length === 2 && Math.random() < 0.5) cand.reverse();
+
+                for (const c of cand) {
+                    const key = `${c.gx},${c.gz}`;
+                    if (!occupied[key]) {
+                        setNpcCell(state, c.gx, c.gz);
+                        state.cooldown = THREE.MathUtils.randInt(6, 18); // slow speed
+                        return;
+                    }
+                }
+
+                // blocked; repick target
+                pickNpcTarget(state);
+                state.cooldown = THREE.MathUtils.randInt(10, 30);
+            }
+
+            /***********************
+             * Animation: billboard + breathing + NPC wander tick
+             ***********************/
+            const clock = new THREE.Clock();
+            let frame = 0;
+
+            function applyBreathing(sprite, t) {
+                const ud = sprite.userData;
+                const s = 1.0 + BREATH_AMP * Math.sin(t * 2.2 + ud.phase);
+                sprite.scale.set(1, s, 1);
+                const currentH = ud.baseHeight * s;
+                sprite.position.y = ud.bottomY + currentH / 2;
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                const t = clock.getElapsedTime();
+
+                // billboard all sprites + breathing
+                for (const s of sprites) {
+                    s.lookAt(camera.position);
+                    applyBreathing(s, t);
+                }
+
+                // NPC wandering tick (every few frames)
+                frame++;
+                if (frame % 6 === 0) {
+                    for (const st of npcState) npcStepToward(st);
+                    // if player is engaged with NPC, NPC may move away; update popup
+                    updateEngagement();
+                }
+
+                renderer.render(scene, camera);
+            }
+
+            // init
+            placeSpriteOnGround(player, px, pz);
+            updateCamera();
+            updateEngagement();
+            animate();
+
+            addEventListener("resize", () => {
+                camera.aspect = innerWidth / innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(innerWidth, innerHeight);
+            });
+        </script>
+    </body>
+</html>
