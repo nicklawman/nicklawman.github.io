@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="zh-TW">
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        <title>Paris Itinerary Map • Nick's Trip 3/6–3/11</title>
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+            crossorigin=""
+        />
+        <style>
+            :root {
+                --brand: #0a84ff;
+                --text: #222;
+                --bg: #f9fbfd;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    sans-serif;
+                background: var(--bg);
+                color: var(--text);
+            }
+            #map {
+                height: 100vh;
+                width: 100%;
+            }
+            .meta-bar {
+                position: fixed;
+                left: 12px;
+                top: 12px;
+                z-index: 1100;
+                background: rgba(255, 255, 255, 0.96);
+                border-radius: 12px;
+                padding: 10px 14px;
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+                font-size: 14px;
+                max-width: 90vw;
+            }
+            .meta-bar strong {
+                color: var(--brand);
+            }
+            .legend {
+                font-size: 12.5px;
+                color: #555;
+                margin-top: 4px;
+            }
+            .num-marker {
+                background: #d32f2f;
+                color: white;
+                font-weight: bold;
+                border: 2.5px solid white;
+                border-radius: 50%;
+                width: 34px;
+                height: 34px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+                font-size: 15px;
+            }
+            .left-panel {
+                position: fixed;
+                left: 12px;
+                bottom: 80px;
+                z-index: 1100;
+                background: white;
+                border-radius: 12px;
+                padding: 12px 16px;
+                box-shadow: 0 5px 18px rgba(0, 0, 0, 0.2);
+                width: 260px;
+                max-width: 92vw;
+            }
+            .left-panel select {
+                width: 100%;
+                padding: 10px;
+                font-size: 15px;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                background: white;
+            }
+            .remark-btn {
+                position: fixed;
+                right: 16px;
+                bottom: 20px;
+                z-index: 1100;
+                background: var(--brand);
+                color: white;
+                border: none;
+                border-radius: 50px;
+                padding: 12px 22px;
+                font-size: 15px;
+                font-weight: 500;
+                box-shadow: 0 4px 14px rgba(10, 132, 255, 0.35);
+                cursor: pointer;
+                transition: all 0.25s;
+            }
+            .remark-btn:hover {
+                background: #0066cc;
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(10, 132, 255, 0.4);
+            }
+            .leaflet-popup-content-wrapper {
+                border-radius: 12px;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            }
+            .leaflet-popup-content {
+                margin: 12px 14px;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+            .leaflet-popup-content h3 {
+                margin: 0 0 8px;
+                font-size: 17px;
+                color: #111;
+            }
+            .leaflet-popup-content p {
+                margin: 6px 0;
+            }
+            .leaflet-popup-tip-container {
+                pointer-events: none;
+            }
+
+            @media (max-width: 640px) {
+                .left-panel {
+                    left: 8px;
+                    bottom: 90px;
+                    width: calc(100% - 16px);
+                    padding: 10px 12px;
+                }
+                .remark-btn {
+                    right: 12px;
+                    bottom: 12px;
+                    padding: 10px 18px;
+                    font-size: 14px;
+                }
+                .meta-bar {
+                    left: 8px;
+                    top: 8px;
+                    font-size: 13px;
+                    padding: 8px 12px;
+                }
+                .num-marker {
+                    width: 30px;
+                    height: 30px;
+                    font-size: 13px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+
+        <div class="meta-bar">
+            <div>
+                <strong>Paris Itinerary Map</strong> • Nick's Trip 3/6–3/11
+            </div>
+            <div class="legend">
+                選擇日期查看當天順序 • 點擊紅色標記查看詳細說明
+            </div>
+        </div>
+
+        <div class="left-panel">
+            <select id="daySelect">
+                <option value="3/6">3/6 (週五) – 抵達 + 奧賽 + 羅浮宮夜</option>
+                <option value="3/7">
+                    3/7 (週六) – 凱旋門 + 老佛爺 + 歌劇院
+                </option>
+                <option value="3/8">3/8 (週日) – 羅丹 + 盧森堡 + 馬萊區</option>
+                <option value="3/9">3/9 (週一) – 奧賽第二次 + 蒙馬特</option>
+                <option value="3/10">3/10 (週二) – 羅浮宮第二次 + 夜景</option>
+                <option value="3/11">3/11 (週三) – 輕鬆上午 + 離開</option>
+                <option value="All">全部地標 (All Landmarks)</option>
+            </select>
+        </div>
+
+        <button class="remark-btn" onclick="window.location.href='remark.html'">
+            查看完整行程說明 →
+        </button>
+
+        <script
+            src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""
+        ></script>
+        <script>
+            const map = L.map("map", {
+                zoomControl: true,
+                zoomSnap: 0.25,
+                zoomDelta: 0.5,
+            }).setView([48.8566, 2.3522], 12);
+
+            L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+                    maxZoom: 19,
+                    attribution:
+                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                },
+            ).addTo(map);
+
+            const DAYS = {
+                "3/6": [
+                    {
+                        en: "Hotel (66 rue du Père Corentin)",
+                        zh: "飯店 (66 rue du Père Corentin)",
+                        desc: "你在巴黎14區的住宿，近Tolbiac地鐵站，交通方便。",
+                        lat: 48.8224,
+                        lon: 2.3326,
+                        morning: "早上從機場抵達，寄放行李後開始一天行程。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Musée d'Orsay",
+                        zh: "奧賽美術館",
+                        desc: "印象派與後印象派藝術殿堂，收藏莫內、梵谷、雷諾瓦等大師經典作品，是巴黎最受歡迎的美術館之一。",
+                        lat: 48.86,
+                        lon: 2.3266,
+                        morning:
+                            "第一次參觀（用Paris Museum Pass），重點欣賞印象派畫作。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Eiffel Tower",
+                        zh: "艾菲爾鐵塔",
+                        desc: "巴黎最具象徵性的地標，鐵結構與夜晚燈光秀聞名全世界。",
+                        lat: 48.8584,
+                        lon: 2.2945,
+                        morning: "",
+                        afternoon: "在戰神廣場外觀拍照（不登塔）。",
+                        evening: "",
+                    },
+                    {
+                        en: "Musée de l'Orangerie",
+                        zh: "橘園美術館",
+                        desc: "專門展示莫內晚期《睡蓮》巨幅壁畫的沉浸式展廳，極具療癒感。",
+                        lat: 48.8638,
+                        lon: 2.3227,
+                        morning: "",
+                        afternoon: "用Pass參觀，欣賞莫內水蓮系列。",
+                        evening: "",
+                    },
+                    {
+                        en: "Louvre Museum",
+                        zh: "羅浮宮",
+                        desc: "全球最大、最古老的藝術博物館，鎮館之寶包括蒙娜麗莎、米羅的維納斯、勝利女神像。",
+                        lat: 48.8606,
+                        lon: 2.3376,
+                        morning: "",
+                        afternoon: "",
+                        evening: "第一次參觀 – 免費夜場（18:00後開放）。",
+                    },
+                    {
+                        en: "La Madeleine",
+                        zh: "瑪德蓮教堂 (La Madeleine)",
+                        desc: "新古典主義神廟式建築，外觀像古希臘神殿，常舉辦高水準古典音樂會。",
+                        lat: 48.87,
+                        lon: 2.3244,
+                        morning: "",
+                        afternoon: "",
+                        evening:
+                            "參加Mozart Requiem & Ravel Bolero音樂會（約€25-40）。",
+                    },
+                ],
+                "3/7": [
+                    {
+                        en: "Hotel (66 rue du Père Corentin)",
+                        zh: "飯店 (66 rue du Père Corentin)",
+                        desc: "你在巴黎14區的住宿，近Tolbiac地鐵站，交通方便。",
+                        lat: 48.8224,
+                        lon: 2.3326,
+                        morning: "從飯店出發。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Arc de Triomphe",
+                        zh: "凱旋門",
+                        desc: "紀念拿破崙戰功的巨大拱門，登頂平台可360度俯瞰香榭麗舍大道與巴黎全景。",
+                        lat: 48.8738,
+                        lon: 2.295,
+                        morning: "用Pass登頂，欣賞城市全景。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Galeries Lafayette",
+                        zh: "老佛爺百貨 (Galeries Lafayette)",
+                        desc: "豪華百貨公司，以華麗Art Nouveau彩繪玻璃穹頂和聖誕櫥窗聞名。",
+                        lat: 48.8738,
+                        lon: 2.3323,
+                        morning: "",
+                        afternoon: "欣賞著名穹頂建築，可順便逛街或喝咖啡。",
+                        evening: "",
+                    },
+                    {
+                        en: "Palais Garnier",
+                        zh: "巴黎歌劇院 (Palais Garnier)",
+                        desc: "19世紀最華麗的歌劇院，金色吊燈、大理石樓梯與天頂壁畫極盡奢華。",
+                        lat: 48.872,
+                        lon: 2.3316,
+                        morning: "",
+                        afternoon: "用Pass參觀內部（可看到著名吊燈）。",
+                        evening: "",
+                    },
+                    {
+                        en: "Saint-Germain-des-Prés",
+                        zh: "聖日耳曼德佩教堂",
+                        desc: "巴黎最古老教堂之一（6世紀起），羅馬式建築，20世紀曾是存在主義者聚集地。",
+                        lat: 48.854,
+                        lon: 2.3345,
+                        morning: "",
+                        afternoon: "",
+                        evening: "參加Bach古典音樂會（約€30）或沿塞納河散步。",
+                    },
+                    {
+                        en: "Notre-Dame Cathedral",
+                        zh: "巴黎聖母院",
+                        desc: "經典哥德式大教堂，以飛扶壁、玫瑰窗與鐘樓聞名，目前火災後修復中。",
+                        lat: 48.853,
+                        lon: 2.3499,
+                        morning: "",
+                        afternoon: "",
+                        evening: "外觀拍照與欣賞修復進度。",
+                    },
+                ],
+                "3/8": [
+                    {
+                        en: "Hotel (66 rue du Père Corentin)",
+                        zh: "飯店 (66 rue du Père Corentin)",
+                        desc: "你在巴黎14區的住宿，近Tolbiac地鐵站，交通方便。",
+                        lat: 48.8224,
+                        lon: 2.3326,
+                        morning: "從飯店出發，輕鬆一天。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Musée Rodin",
+                        zh: "羅丹美術館",
+                        desc: "專門展示雕塑大師羅丹作品，《思想者》與《地獄之門》在花園中展出，環境寧靜優美。",
+                        lat: 48.8553,
+                        lon: 2.3158,
+                        morning: "用Pass參觀，重點逛花園雕塑。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Luxembourg Gardens",
+                        zh: "盧森堡花園",
+                        desc: "巴黎最優雅的公共花園，有美麗噴泉、雕塑、盧森堡宮與孩子玩帆船池。",
+                        lat: 48.8468,
+                        lon: 2.3371,
+                        morning: "",
+                        afternoon: "散步、休息、讀書或野餐。",
+                        evening: "",
+                    },
+                    {
+                        en: "Place des Vosges (Marais)",
+                        zh: "孚日廣場 (馬萊區)",
+                        desc: "巴黎最古老的規劃廣場，四周對稱紅磚建築，文藝復興風格，是馬萊區經典地標。",
+                        lat: 48.8556,
+                        lon: 2.3655,
+                        morning: "",
+                        afternoon: "",
+                        evening: "漫步馬萊區歷史街區與廣場。",
+                    },
+                    {
+                        en: "Café de Flore",
+                        zh: "花神咖啡館",
+                        desc: "20世紀存在主義聖地，沙特、波娃常坐，巴黎文學與哲學氛圍代表。",
+                        lat: 48.8538,
+                        lon: 2.3328,
+                        morning: "",
+                        afternoon: "",
+                        evening: "外帶咖啡或短坐感受氛圍。",
+                    },
+                ],
+                "3/9": [
+                    {
+                        en: "Hotel (66 rue du Père Corentin)",
+                        zh: "飯店 (66 rue du Père Corentin)",
+                        desc: "你在巴黎14區的住宿，近Tolbiac地鐵站，交通方便。",
+                        lat: 48.8224,
+                        lon: 2.3326,
+                        morning: "從飯店出發。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Musée d'Orsay",
+                        zh: "奧賽美術館",
+                        desc: "印象派與後印象派藝術殿堂，收藏莫內、梵谷、雷諾瓦等大師經典作品，是巴黎最受歡迎的美術館之一。",
+                        lat: 48.86,
+                        lon: 2.3266,
+                        morning:
+                            "第二次參觀（單買票€16），可更專注特定展區或喜歡的作品。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Sacré-Cœur",
+                        zh: "聖心堂 (Sacré-Cœur)",
+                        desc: "蒙馬特高地上的白色羅馬-拜占庭式教堂，穹頂與全巴黎最高觀景平台。",
+                        lat: 48.8867,
+                        lon: 2.343,
+                        morning: "",
+                        afternoon: "登蒙馬特，參觀教堂並欣賞巴黎全景。",
+                        evening: "",
+                    },
+                    {
+                        en: "Shakespeare & Co.",
+                        zh: "莎士比亞書店",
+                        desc: "傳奇英文書店，自1951年起是作家與讀者聚集地，充滿文學氣息。",
+                        lat: 48.8526,
+                        lon: 2.3471,
+                        morning: "",
+                        afternoon: "",
+                        evening: "逛書店、買書或感受氛圍。",
+                    },
+                ],
+                "3/10": [
+                    {
+                        en: "Hotel (66 rue du Père Corentin)",
+                        zh: "飯店 (66 rue du Père Corentin)",
+                        desc: "你在巴黎14區的住宿，近Tolbiac地鐵站，交通方便。",
+                        lat: 48.8224,
+                        lon: 2.3326,
+                        morning: "從飯店出發。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Louvre Museum",
+                        zh: "羅浮宮",
+                        desc: "全球最大、最古老的藝術博物館，鎮館之寶包括蒙娜麗莎、米羅的維納斯、勝利女神像。",
+                        lat: 48.8606,
+                        lon: 2.3376,
+                        morning:
+                            "第二次參觀（用Pass），可補看上次沒看到的區域。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Galeries Lafayette",
+                        zh: "老佛爺百貨",
+                        desc: "豪華百貨公司，以華麗Art Nouveau彩繪玻璃穹頂和聖誕櫥窗聞名。",
+                        lat: 48.8738,
+                        lon: 2.3323,
+                        morning: "",
+                        afternoon: "再次欣賞穹頂或從頂樓看巴黎景色。",
+                        evening: "",
+                    },
+                    {
+                        en: "Trocadéro",
+                        zh: "托卡德羅廣場",
+                        desc: "觀賞艾菲爾鐵塔最佳地點，有噴泉、階梯與夜間燈光秀視角。",
+                        lat: 48.8621,
+                        lon: 2.288,
+                        morning: "",
+                        afternoon: "",
+                        evening: "拍攝艾菲爾鐵塔夜景。",
+                    },
+                    {
+                        en: "La Madeleine",
+                        zh: "瑪德蓮教堂 (La Madeleine)",
+                        desc: "新古典主義神廟式建築，外觀像古希臘神殿，常舉辦高水準古典音樂會。",
+                        lat: 48.87,
+                        lon: 2.3244,
+                        morning: "",
+                        afternoon: "",
+                        evening: "參加Baroque古典音樂會（約€25）。",
+                    },
+                ],
+                "3/11": [
+                    {
+                        en: "Hotel (66 rue du Père Corentin)",
+                        zh: "飯店 (66 rue du Père Corentin)",
+                        desc: "你在巴黎14區的住宿，近Tolbiac地鐵站，交通方便。",
+                        lat: 48.8224,
+                        lon: 2.3326,
+                        morning: "早上輕鬆準備退房與前往機場。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Café de Flore",
+                        zh: "花神咖啡館",
+                        desc: "20世紀存在主義聖地，沙特、波娃常坐，巴黎文學與哲學氛圍代表。",
+                        lat: 48.8538,
+                        lon: 2.3328,
+                        morning: "最後一杯咖啡，或附近短暫散步。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                ],
+                All: [
+                    {
+                        en: "Hotel (66 rue du Père Corentin)",
+                        zh: "飯店 (66 rue du Père Corentin)",
+                        desc: "你在巴黎14區的住宿，近Tolbiac地鐵站，交通方便。",
+                        lat: 48.8224,
+                        lon: 2.3326,
+                    },
+                    {
+                        en: "Musée d'Orsay",
+                        zh: "奧賽美術館",
+                        desc: "印象派與後印象派藝術殿堂，收藏莫內、梵谷、雷諾瓦等大師經典作品。",
+                        lat: 48.86,
+                        lon: 2.3266,
+                    },
+                    {
+                        en: "Eiffel Tower",
+                        zh: "艾菲爾鐵塔",
+                        desc: "巴黎最具象徵性的地標，鐵結構與夜晚燈光秀聞名全世界。",
+                        lat: 48.8584,
+                        lon: 2.2945,
+                    },
+                    {
+                        en: "Musée de l'Orangerie",
+                        zh: "橘園美術館",
+                        desc: "專門展示莫內晚期《睡蓮》巨幅壁畫的沉浸式展廳。",
+                        lat: 48.8638,
+                        lon: 2.3227,
+                    },
+                    {
+                        en: "Louvre Museum",
+                        zh: "羅浮宮",
+                        desc: "全球最大藝術博物館，蒙娜麗莎、維納斯雕像、勝利女神等鎮館之寶。",
+                        lat: 48.8606,
+                        lon: 2.3376,
+                    },
+                    {
+                        en: "La Madeleine",
+                        zh: "瑪德蓮教堂",
+                        desc: "新古典主義神廟式建築，常舉辦古典音樂會。",
+                        lat: 48.87,
+                        lon: 2.3244,
+                    },
+                    {
+                        en: "Arc de Triomphe",
+                        zh: "凱旋門",
+                        desc: "紀念拿破崙戰功的巨大拱門，登頂可俯瞰巴黎。",
+                        lat: 48.8738,
+                        lon: 2.295,
+                    },
+                    {
+                        en: "Galeries Lafayette",
+                        zh: "老佛爺百貨",
+                        desc: "豪華百貨公司，以華麗Art Nouveau彩繪玻璃穹頂聞名。",
+                        lat: 48.8738,
+                        lon: 2.3323,
+                    },
+                    {
+                        en: "Palais Garnier",
+                        zh: "巴黎歌劇院",
+                        desc: "19世紀最華麗的歌劇院，金碧輝煌的吊燈與大理石樓梯。",
+                        lat: 48.872,
+                        lon: 2.3316,
+                    },
+                    {
+                        en: "Saint-Germain-des-Prés",
+                        zh: "聖日耳曼德佩教堂",
+                        desc: "巴黎最古老教堂之一，20世紀知識分子聚集地。",
+                        lat: 48.854,
+                        lon: 2.3345,
+                    },
+                    {
+                        en: "Notre-Dame Cathedral",
+                        zh: "巴黎聖母院",
+                        desc: "經典哥德式大教堂，目前修復中。",
+                        lat: 48.853,
+                        lon: 2.3499,
+                    },
+                    {
+                        en: "Musée Rodin",
+                        zh: "羅丹美術館",
+                        desc: "專門展示雕塑大師羅丹作品，《思想者》在花園展出。",
+                        lat: 48.8553,
+                        lon: 2.3158,
+                    },
+                    {
+                        en: "Luxembourg Gardens",
+                        zh: "盧森堡花園",
+                        desc: "巴黎最優雅的公共花園，有噴泉、雕塑與宮殿。",
+                        lat: 48.8468,
+                        lon: 2.3371,
+                    },
+                    {
+                        en: "Place des Vosges (Marais)",
+                        zh: "孚日廣場 (馬萊區)",
+                        desc: "巴黎最古老的規劃廣場，四周對稱紅磚建築。",
+                        lat: 48.8556,
+                        lon: 2.3655,
+                    },
+                    {
+                        en: "Café de Flore",
+                        zh: "花神咖啡館",
+                        desc: "存在主義聖地，沙特、波娃常坐的文學咖啡館。",
+                        lat: 48.8538,
+                        lon: 2.3328,
+                    },
+                    {
+                        en: "Sacré-Cœur",
+                        zh: "聖心堂",
+                        desc: "蒙馬特高地的白色教堂，全巴黎最高觀景點。",
+                        lat: 48.8867,
+                        lon: 2.343,
+                    },
+                    {
+                        en: "Shakespeare & Co.",
+                        zh: "莎士比亞書店",
+                        desc: "傳奇英文書店，作家與讀者聚集地。",
+                        lat: 48.8526,
+                        lon: 2.3471,
+                    },
+                    {
+                        en: "Trocadéro",
+                        zh: "托卡德羅廣場",
+                        desc: "觀賞艾菲爾鐵塔最佳地點，夜景超美。",
+                        lat: 48.8621,
+                        lon: 2.288,
+                    },
+                    {
+                        en: "Palace of Versailles",
+                        zh: "凡爾賽宮",
+                        desc: "路易十四的奢華宮殿與花園，法國絕對王權象徵。",
+                        lat: 48.8049,
+                        lon: 2.1204,
+                    },
+                    {
+                        en: "Disneyland Paris",
+                        zh: "巴黎迪士尼樂園",
+                        desc: "歐洲最大迪士尼主題樂園，適合家庭與粉絲。",
+                        lat: 48.8674,
+                        lon: 2.7847,
+                    },
+                    {
+                        en: "Champs-Élysées",
+                        zh: "香榭麗舍大道",
+                        desc: "世界最著名大道，精品店、咖啡廳與凱旋門盡頭。",
+                        lat: 48.8698,
+                        lon: 2.3076,
+                    },
+                    {
+                        en: "Pont Neuf",
+                        zh: "新橋",
+                        desc: "橫跨塞納河最古老的橋，石面具與浪漫氛圍。",
+                        lat: 48.8582,
+                        lon: 2.3437,
+                    },
+                ],
+            };
+
+            let currentMarkers = [];
+            let currentPolyline;
+
+            function showDay(day) {
+                currentMarkers.forEach((m) => map.removeLayer(m));
+                if (currentPolyline) map.removeLayer(currentPolyline);
+                currentMarkers = [];
+
+                const places = DAYS[day] || [];
+                const latlngs = [];
+
+                places.forEach((p, i) => {
+                    if (!p.lat || !p.lon) return; // 防呆
+                    latlngs.push([p.lat, p.lon]);
+                    const title = `${p.en} (${p.zh})`;
+                    let html = `<h3>${title}</h3><p>${p.desc}</p>`;
+                    if (day !== "All") {
+                        html += `<p><strong>上午：</strong> ${p.morning || "－"}</p>`;
+                        html += `<p><strong>下午：</strong> ${p.afternoon || "－"}</p>`;
+                        html += `<p><strong>晚上：</strong> ${p.evening || "－"}</p>`;
+                        const icon = L.divIcon({
+                            className: "num-marker",
+                            html: String(i + 1).padStart(2, "0"),
+                            iconSize: [34, 34],
+                            iconAnchor: [17, 17],
+                        });
+                        const m = L.marker([p.lat, p.lon], {
+                            icon,
+                            title,
+                        }).addTo(map);
+                        m.bindPopup(html, { maxWidth: 360 });
+                        currentMarkers.push(m);
+                    } else {
+                        const m = L.marker([p.lat, p.lon]).addTo(map);
+                        m.bindPopup(html, { maxWidth: 360 });
+                        currentMarkers.push(m);
+                    }
+                });
+
+                if (latlngs.length > 1 && day !== "All") {
+                    currentPolyline = L.polyline(latlngs, {
+                        color: "#0A84FF",
+                        weight: 4,
+                        opacity: 0.8,
+                    }).addTo(map);
+                    map.fitBounds(currentPolyline.getBounds(), {
+                        padding: [80, 80],
+                    });
+                } else if (latlngs.length > 0) {
+                    map.fitBounds(L.latLngBounds(latlngs), {
+                        padding: [80, 80],
+                    });
+                } else {
+                    map.setView([48.8566, 2.3522], 12);
+                }
+            }
+
+            document
+                .getElementById("daySelect")
+                .addEventListener("change", (e) => showDay(e.target.value));
+            showDay("3/6"); // 預設顯示第一天
+        </script>
+    </body>
+</html>
