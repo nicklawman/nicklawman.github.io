@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="zh-TW">
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        <title>Barcelona Itinerary Map • Nick's Trip 3/1–3/5</title>
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+            crossorigin=""
+        />
+        <style>
+            :root {
+                --brand: #d32f2f; /* 巴塞隆納風格：紅色調（靈感來自國旗/聖家堂） */
+                --text: #222;
+                --bg: #f9fbfd;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    sans-serif;
+                background: var(--bg);
+                color: var(--text);
+            }
+            #map {
+                height: 100vh;
+                width: 100%;
+            }
+            .meta-bar {
+                position: fixed;
+                left: 12px;
+                top: 12px;
+                z-index: 1100;
+                background: rgba(255, 255, 255, 0.96);
+                border-radius: 12px;
+                padding: 10px 14px;
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+                font-size: 14px;
+                max-width: 90vw;
+            }
+            .meta-bar strong {
+                color: var(--brand);
+            }
+            .legend {
+                font-size: 12.5px;
+                color: #555;
+                margin-top: 4px;
+            }
+            .num-marker {
+                background: var(--brand);
+                color: white;
+                font-weight: bold;
+                border: 2.5px solid white;
+                border-radius: 50%;
+                width: 34px;
+                height: 34px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+                font-size: 15px;
+            }
+            .left-panel {
+                position: fixed;
+                left: 12px;
+                bottom: 80px;
+                z-index: 1100;
+                background: white;
+                border-radius: 12px;
+                padding: 12px 16px;
+                box-shadow: 0 5px 18px rgba(0, 0, 0, 0.2);
+                width: 260px;
+                max-width: 92vw;
+            }
+            .left-panel select {
+                width: 100%;
+                padding: 10px;
+                font-size: 15px;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                background: white;
+            }
+            .remark-btn {
+                position: fixed;
+                right: 16px;
+                bottom: 20px;
+                z-index: 1100;
+                background: var(--brand);
+                color: white;
+                border: none;
+                border-radius: 50px;
+                padding: 12px 22px;
+                font-size: 15px;
+                font-weight: 500;
+                box-shadow: 0 4px 14px rgba(211, 47, 47, 0.35);
+                cursor: pointer;
+                transition: all 0.25s;
+            }
+            .remark-btn:hover {
+                background: #b71c1c;
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(211, 47, 47, 0.4);
+            }
+            .leaflet-popup-content-wrapper {
+                border-radius: 12px;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            }
+            .leaflet-popup-content {
+                margin: 12px 14px;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+            .leaflet-popup-content h3 {
+                margin: 0 0 8px;
+                font-size: 17px;
+                color: #111;
+            }
+            .leaflet-popup-content p {
+                margin: 6px 0;
+            }
+
+            @media (max-width: 640px) {
+                .left-panel {
+                    left: 8px;
+                    bottom: 90px;
+                    width: calc(100% - 16px);
+                    padding: 10px 12px;
+                }
+                .remark-btn {
+                    right: 12px;
+                    bottom: 12px;
+                    padding: 10px 18px;
+                    font-size: 14px;
+                }
+                .meta-bar {
+                    left: 8px;
+                    top: 8px;
+                    font-size: 13px;
+                    padding: 8px 12px;
+                }
+                .num-marker {
+                    width: 30px;
+                    height: 30px;
+                    font-size: 13px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+
+        <div class="meta-bar">
+            <div>
+                <strong>Barcelona Itinerary Map</strong> • Nick's Trip 3/1–3/5
+            </div>
+            <div class="legend">
+                選擇日期查看當天順序 • 點擊紅色標記查看詳細說明
+            </div>
+        </div>
+
+        <div class="left-panel">
+            <select id="daySelect">
+                <option value="3/1">3/1 (週日) – 抵達 + 入住 + 晚餐</option>
+                <option value="3/2">3/2 (週一) – 高第建築 + Akima 午餐</option>
+                <option value="3/3">3/3 (週二) – MWC + 哥德區</option>
+                <option value="3/4">3/4 (週三) – Sagrada Família + 高第</option>
+                <option value="3/5">3/5 (週四) – Montjuïc + 離開</option>
+                <option value="All">全部地標 (All Landmarks)</option>
+            </select>
+        </div>
+
+        <button class="remark-btn" onclick="window.location.href='remark.html'">
+            查看完整行程說明 →
+        </button>
+
+        <script
+            src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""
+        ></script>
+        <script>
+            const map = L.map("map", {
+                zoomControl: true,
+                zoomSnap: 0.25,
+                zoomDelta: 0.5,
+            }).setView([41.3851, 2.1734], 13);
+
+            L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+                    maxZoom: 19,
+                    attribution:
+                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                },
+            ).addTo(map);
+
+            const DAYS = {
+                "3/1": [
+                    {
+                        en: "Barcelona-El Prat Airport (BCN)",
+                        zh: "巴塞隆納機場 (BCN)",
+                        desc: "抵達點，國際機場。建議用Aerobus或地鐵進市區。",
+                        lat: 41.2974,
+                        lon: 2.0833,
+                        morning: "－",
+                        afternoon: "抵達後前往第一個check-in點。",
+                        evening: "",
+                    },
+                    {
+                        en: "Check-in Point (Passeig de Sant Antoni nº30)",
+                        zh: "飯店check-in點 (Passeig de Sant Antoni nº30)",
+                        desc: "先辦理check-in或相關手續的地點。",
+                        lat: 41.3845,
+                        lon: 2.162,
+                        morning: "",
+                        afternoon: "辦理check-in。",
+                        evening: "",
+                    },
+                    {
+                        en: "Accommodation (Consell de Cent, 207)",
+                        zh: "入住飯店 (Consell de Cent, 207)",
+                        desc: "你的住宿地點，位於Eixample擴展區，交通便利。",
+                        lat: 41.385,
+                        lon: 2.1585,
+                        morning: "",
+                        afternoon: "放行李，正式入住。",
+                        evening: "",
+                    },
+                    {
+                        en: "Dinner Restaurant (Carrer de la Reina Cristina, 3)",
+                        zh: "晚餐餐廳 (Carrer de la Reina Cristina, 3)",
+                        desc: "固定晚餐地點，位於Ciutat Vella舊城區。",
+                        lat: 41.3842,
+                        lon: 2.187,
+                        morning: "",
+                        afternoon: "",
+                        evening: "固定晚餐。",
+                    },
+                ],
+                "3/2": [
+                    {
+                        en: "Accommodation (Consell de Cent, 207)",
+                        zh: "飯店 (Consell de Cent, 207)",
+                        desc: "你的住宿地點，Eixample區中心。",
+                        lat: 41.385,
+                        lon: 2.1585,
+                        morning: "從飯店出發。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Park Güell",
+                        zh: "桂爾公園",
+                        desc: "高第代表作，彩色馬賽克與奇幻建築，UNESCO世界遺產。",
+                        lat: 41.4139,
+                        lon: 2.1525,
+                        morning: "預約早場參觀（€10）。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Akima (Michelin Restaurant)",
+                        zh: "Akima 米其林餐廳",
+                        desc: "米其林推薦餐廳，精緻料理。",
+                        lat: 41.3895,
+                        lon: 2.162,
+                        morning: "",
+                        afternoon: "固定用餐 13:00-15:00。",
+                        evening: "",
+                    },
+                    {
+                        en: "Barcelona Cathedral",
+                        zh: "巴塞隆納大教堂",
+                        desc: "哥德式主教堂，內部華麗，屋頂可俯瞰舊城。",
+                        lat: 41.3839,
+                        lon: 2.1762,
+                        morning: "",
+                        afternoon: "內部參觀（€11）。",
+                        evening: "",
+                    },
+                    {
+                        en: "La Rambla",
+                        zh: "蘭布拉大道",
+                        desc: "巴塞隆納最著名步行街，街頭表演、市場與花店。",
+                        lat: 41.3855,
+                        lon: 2.173,
+                        morning: "",
+                        afternoon: "",
+                        evening: "晚上散步。",
+                    },
+                ],
+                "3/3": [
+                    {
+                        en: "Accommodation (Consell de Cent, 207)",
+                        zh: "飯店 (Consell de Cent, 207)",
+                        desc: "你的住宿地點，Eixample區中心。",
+                        lat: 41.385,
+                        lon: 2.1585,
+                        morning: "從飯店出發。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Santa Maria del Mar",
+                        zh: "聖瑪麗亞德爾馬教堂",
+                        desc: "純正哥德式教堂，被譽為「地中海大教堂」，光影極美。",
+                        lat: 41.3838,
+                        lon: 2.1825,
+                        morning: "上午參觀（免費）。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "MWC Venue (Av. Joan Carles I, 64)",
+                        zh: "MWC會場",
+                        desc: "Mobile World Congress 主場地。",
+                        lat: 41.3578,
+                        lon: 2.13,
+                        morning: "",
+                        afternoon: "固定 11:00-13:00。",
+                        evening: "",
+                    },
+                    {
+                        en: "Gothic Quarter",
+                        zh: "哥德區",
+                        desc: "巴塞隆納最古老區域，狹窄巷弄、羅馬遺跡與中世紀建築。",
+                        lat: 41.383,
+                        lon: 2.175,
+                        morning: "",
+                        afternoon: "散步探索。",
+                        evening: "",
+                    },
+                ],
+                "3/4": [
+                    {
+                        en: "Accommodation (Consell de Cent, 207)",
+                        zh: "飯店 (Consell de Cent, 207)",
+                        desc: "你的住宿地點，Eixample區中心。",
+                        lat: 41.385,
+                        lon: 2.1585,
+                        morning: "從飯店出發。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Sagrada Família",
+                        zh: "聖家堂",
+                        desc: "高第未完成傑作，UNESCO世界遺產，巴塞隆納最著名地標。",
+                        lat: 41.4036,
+                        lon: 2.1743,
+                        morning: "固定 09:00-10:30（預約€26）。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Casa Batlló",
+                        zh: "巴特羅之家",
+                        desc: "高第經典現代主義建築，外觀如龍骨，彩色馬賽克。",
+                        lat: 41.3917,
+                        lon: 2.165,
+                        morning: "",
+                        afternoon: "參觀內部（€29）。",
+                        evening: "",
+                    },
+                    {
+                        en: "La Pedrera (Casa Milà)",
+                        zh: "米拉之家 (La Pedrera)",
+                        desc: "高第波浪形屋頂建築，屋頂煙囪如戰士。",
+                        lat: 41.3954,
+                        lon: 2.1619,
+                        morning: "",
+                        afternoon: "參觀（€28）。",
+                        evening: "",
+                    },
+                    {
+                        en: "Picasso Museum",
+                        zh: "畢卡索美術館",
+                        desc: "收藏畢卡索早期作品，位於哥德區老建築內。",
+                        lat: 41.385,
+                        lon: 2.186,
+                        morning: "",
+                        afternoon: "",
+                        evening: "晚間參觀（€12）。",
+                    },
+                ],
+                "3/5": [
+                    {
+                        en: "Accommodation (Consell de Cent, 207)",
+                        zh: "飯店 (Consell de Cent, 207)",
+                        desc: "你的住宿地點，Eixample區中心。",
+                        lat: 41.385,
+                        lon: 2.1585,
+                        morning: "從飯店出發。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Montjuïc Castle",
+                        zh: "蒙特惠奇城堡",
+                        desc: "山頂歷史堡壘，全景俯瞰巴塞隆納與港口。",
+                        lat: 41.3725,
+                        lon: 2.1678,
+                        morning: "搭纜車上山參觀（€12）。",
+                        afternoon: "",
+                        evening: "",
+                    },
+                    {
+                        en: "Arc de Triomf",
+                        zh: "凱旋門",
+                        desc: "1888年世博會遺跡，紅磚新摩爾式建築。",
+                        lat: 41.3912,
+                        lon: 2.1808,
+                        morning: "",
+                        afternoon: "拍照與Ciutadella公園散步。",
+                        evening: "",
+                    },
+                    {
+                        en: "Barcelona-El Prat Airport (BCN)",
+                        zh: "巴塞隆納機場 (BCN)",
+                        desc: "離開點，20:20航班。",
+                        lat: 41.2974,
+                        lon: 2.0833,
+                        morning: "",
+                        afternoon: "",
+                        evening: "建議17:00前出發（地鐵L9S或Uber）。",
+                    },
+                ],
+                All: [
+                    // 全部地標（與每日重複 + 少量額外推薦）
+                    {
+                        en: "Barcelona-El Prat Airport (BCN)",
+                        zh: "巴塞隆納機場 (BCN)",
+                        desc: "國際機場，抵達與離開點。",
+                        lat: 41.2974,
+                        lon: 2.0833,
+                    },
+                    {
+                        en: "Check-in Point (Passeig de Sant Antoni nº30)",
+                        zh: "飯店check-in點",
+                        desc: "第一個辦理手續地點。",
+                        lat: 41.3845,
+                        lon: 2.162,
+                    },
+                    {
+                        en: "Accommodation (Consell de Cent, 207)",
+                        zh: "入住飯店",
+                        desc: "你的住宿，Eixample區。",
+                        lat: 41.385,
+                        lon: 2.1585,
+                    },
+                    {
+                        en: "Dinner Restaurant (Carrer de la Reina Cristina, 3)",
+                        zh: "晚餐餐廳",
+                        desc: "3/1固定晚餐地點。",
+                        lat: 41.3842,
+                        lon: 2.187,
+                    },
+                    {
+                        en: "Park Güell",
+                        zh: "桂爾公園",
+                        desc: "高第彩色馬賽克公園，全景絕美。",
+                        lat: 41.4139,
+                        lon: 2.1525,
+                    },
+                    {
+                        en: "Akima (Michelin Restaurant)",
+                        zh: "Akima 米其林餐廳",
+                        desc: "米其林推薦精緻料理。",
+                        lat: 41.3895,
+                        lon: 2.162,
+                    },
+                    {
+                        en: "Barcelona Cathedral",
+                        zh: "巴塞隆納大教堂",
+                        desc: "哥德式主教堂，屋頂可俯瞰舊城。",
+                        lat: 41.3839,
+                        lon: 2.1762,
+                    },
+                    {
+                        en: "La Rambla",
+                        zh: "蘭布拉大道",
+                        desc: "最熱鬧步行街，街頭表演與Boqueria市場。",
+                        lat: 41.3855,
+                        lon: 2.173,
+                    },
+                    {
+                        en: "Santa Maria del Mar",
+                        zh: "聖瑪麗亞德爾馬教堂",
+                        desc: "純正哥德式，內部光影極美。",
+                        lat: 41.3838,
+                        lon: 2.1825,
+                    },
+                    {
+                        en: "MWC Venue (Av. Joan Carles I, 64)",
+                        zh: "MWC會場",
+                        desc: "Mobile World Congress 主場地。",
+                        lat: 41.3578,
+                        lon: 2.13,
+                    },
+                    {
+                        en: "Gothic Quarter",
+                        zh: "哥德區",
+                        desc: "中世紀巷弄與羅馬遺跡。",
+                        lat: 41.383,
+                        lon: 2.175,
+                    },
+                    {
+                        en: "Sagrada Família",
+                        zh: "聖家堂",
+                        desc: "高第未完成傑作，巴塞隆納象徵。",
+                        lat: 41.4036,
+                        lon: 2.1743,
+                    },
+                    {
+                        en: "Casa Batlló",
+                        zh: "巴特羅之家",
+                        desc: "高第彩色龍骨建築。",
+                        lat: 41.3917,
+                        lon: 2.165,
+                    },
+                    {
+                        en: "La Pedrera (Casa Milà)",
+                        zh: "米拉之家",
+                        desc: "高第波浪屋頂建築。",
+                        lat: 41.3954,
+                        lon: 2.1619,
+                    },
+                    {
+                        en: "Picasso Museum",
+                        zh: "畢卡索美術館",
+                        desc: "畢卡索早期作品收藏。",
+                        lat: 41.385,
+                        lon: 2.186,
+                    },
+                    {
+                        en: "Montjuïc Castle",
+                        zh: "蒙特惠奇城堡",
+                        desc: "山頂堡壘，全景俯瞰城市。",
+                        lat: 41.3725,
+                        lon: 2.1678,
+                    },
+                    {
+                        en: "Arc de Triomf",
+                        zh: "凱旋門",
+                        desc: "1888世博會遺跡，新摩爾式建築。",
+                        lat: 41.3912,
+                        lon: 2.1808,
+                    },
+                ],
+            };
+
+            let currentMarkers = [];
+            let currentPolyline;
+
+            function showDay(day) {
+                currentMarkers.forEach((m) => map.removeLayer(m));
+                if (currentPolyline) map.removeLayer(currentPolyline);
+                currentMarkers = [];
+
+                const places = DAYS[day] || [];
+                const latlngs = [];
+
+                places.forEach((p, i) => {
+                    if (!p.lat || !p.lon) return;
+                    latlngs.push([p.lat, p.lon]);
+                    const title = `${p.en} (${p.zh})`;
+                    let html = `<h3>${title}</h3><p>${p.desc}</p>`;
+                    if (day !== "All") {
+                        html += `<p><strong>上午：</strong> ${p.morning || "－"}</p>`;
+                        html += `<p><strong>下午：</strong> ${p.afternoon || "－"}</p>`;
+                        html += `<p><strong>晚上：</strong> ${p.evening || "－"}</p>`;
+                        const icon = L.divIcon({
+                            className: "num-marker",
+                            html: String(i + 1).padStart(2, "0"),
+                            iconSize: [34, 34],
+                            iconAnchor: [17, 17],
+                        });
+                        const m = L.marker([p.lat, p.lon], {
+                            icon,
+                            title,
+                        }).addTo(map);
+                        m.bindPopup(html, { maxWidth: 360 });
+                        currentMarkers.push(m);
+                    } else {
+                        const m = L.marker([p.lat, p.lon]).addTo(map);
+                        m.bindPopup(html, { maxWidth: 360 });
+                        currentMarkers.push(m);
+                    }
+                });
+
+                if (latlngs.length > 1 && day !== "All") {
+                    currentPolyline = L.polyline(latlngs, {
+                        color: "#d32f2f",
+                        weight: 4,
+                        opacity: 0.8,
+                    }).addTo(map);
+                    map.fitBounds(currentPolyline.getBounds(), {
+                        padding: [80, 80],
+                    });
+                } else if (latlngs.length > 0) {
+                    map.fitBounds(L.latLngBounds(latlngs), {
+                        padding: [80, 80],
+                    });
+                } else {
+                    map.setView([41.3851, 2.1734], 13);
+                }
+            }
+
+            document
+                .getElementById("daySelect")
+                .addEventListener("change", (e) => showDay(e.target.value));
+            showDay("3/1"); // 預設顯示第一天
+        </script>
+    </body>
+</html>
