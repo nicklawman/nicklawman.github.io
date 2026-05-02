@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <title>Law Mandala</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <div
+            class="hamburger"
+            onclick="document.getElementById('popup').style.display = 'flex'"
+        >
+            ☰
+        </div>
+
+        <div class="mandal-container" id="gridBox">
+            <div id="g11" class="grid-item">
+                <small>P4</small>
+                <div class="content"></div>
+            </div>
+            <div id="g12" class="grid-item">
+                <small>P5</small>
+                <div class="content"></div>
+            </div>
+            <div id="g13" class="grid-item">
+                <small>P6</small>
+                <div class="content"></div>
+            </div>
+            <div id="g21" class="grid-item">
+                <small>P3</small>
+                <div class="content"></div>
+            </div>
+            <div id="g22" class="center-item">請選擇科目</div>
+            <div id="g23" class="grid-item">
+                <small>P7</small>
+                <div class="content"></div>
+            </div>
+            <div id="g31" class="grid-item">
+                <small>P2</small>
+                <div class="content"></div>
+            </div>
+            <div id="g32" class="grid-item">
+                <small>P1</small>
+                <div class="content"></div>
+            </div>
+            <div id="g33" class="grid-item">
+                <small>P8</small>
+                <div class="content"></div>
+            </div>
+        </div>
+
+        <div id="zoomView">
+            <div
+                style="
+                    padding: 10px;
+                    border-bottom: 1px solid #eee;
+                    display: flex;
+                    justify-content: space-between;
+                "
+            >
+                <button
+                    onclick="toggleZoom(false)"
+                    style="border: none; background: none; font-size: 1.2rem"
+                >
+                    ✕ 關閉
+                </button>
+                <span id="zoomTitle">閱讀模式</span>
+            </div>
+            <div class="zoom-body" id="zoomBody"></div>
+            <div class="nav-bar">
+                <button class="nav-btn" id="prevBtn" onclick="movePart(-1)">
+                    ←
+                </button>
+                <button class="nav-btn" id="nextBtn" onclick="movePart(1)">
+                    →
+                </button>
+            </div>
+        </div>
+
+        <div
+            id="popup"
+            onclick="if (event.target === this) this.style.display = 'none';"
+        >
+            <div class="popup-box">
+                <h4>切換科目</h4>
+                <input
+                    type="text"
+                    id="cmdInput"
+                    class="form-control"
+                    placeholder="輸入代碼 (cv, cp...)"
+                />
+                <hr />
+                <p style="font-size: 0.8rem; color: #999">或點擊下方選單</p>
+                <div id="subList" style="max-height: 200px; overflow-y: auto">
+                    <!-- 選單由 data.js 提供 -->
+                </div>
+            </div>
+        </div>
+
+        <script src="data.js"></script>
+        <script src="mandal.js"></script>
+        <script>
+            // 生成手機版列表
+            const list = document.getElementById("subList");
+            for (let code in window.SUBJECT_MAP) {
+                let div = document.createElement("div");
+                div.style.padding = "10px";
+                div.style.borderBottom = "1px solid #f0f0f0";
+                div.innerText = `${window.SUBJECT_MAP[code]} (${code})`;
+                div.onclick = () => {
+                    currentSubject = code;
+                    document.getElementById("popup").style.display = "none";
+                    updateContent();
+                };
+                list.appendChild(div);
+            }
+        </script>
+    </body>
+</html>
